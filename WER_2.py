@@ -24,13 +24,13 @@ class Dane:
         # Lista zawierająca wartosci SEM dla kazdego punktu (only Fy) ( dlugosc pionu )
         # same 0.0001 dla szczorów
         self.semy_outputow = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
-        ## Słownik zawierający wartosci SEM : k1,r1,k2,r2
+        # Słownik zawierający wartosci SEM : k1,r1,k2,r2
         # dla grupy - wartosci srednie
         self.nazwa = ''
         # string - nr szczura/nazwa grupy
         self.By = []
         self.semy_outputow_O = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
-        ## Słownik zawierający orginalne wartosci SEM : k1,r1,k2,r2
+        # Słownik zawierający orginalne wartosci SEM : k1,r1,k2,r2
         # dla grupy - wartosci srednie
         self.outputy = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
         # Słownik zawierający wartosci: k1,r1,k2,r2
@@ -43,7 +43,7 @@ class Dane:
         self.parametry_O = []
         # Lista orginalnych parametrow
         self.ok = []
-        # Lista zawierająca info o tym czy dany punkt (z By,Fy) jest uwzględniany przy liczeniu sem/ parametrow/ outputow
+        # Lista zawierająca info o tym czy dany punkt (z By,Fy) jest uwzględniany przy liczeniu sem/ parametrow/outputow
         self.klasa = "Dane"
 
     def obl_output(self):
@@ -136,7 +136,7 @@ class Grupa(Dane):
         il_szczurow = len(self.szczury)
         for out in outputs_dict:
             lista = [self.szczury[i].outputy[out] for i in range(il_szczurow) if self.szczury[i].aktywnosc == 1]
-            self.semy_outputow.update({out:sem(lista)})
+            self.semy_outputow.update({out: sem(lista)})
 
     def obl_sr_By_Fy_i_semy_pkt_grupy(self):
         '''
@@ -154,7 +154,7 @@ class Grupa(Dane):
             il_szczurow = len(self.szczury)
             for szczur in self.szczury:
                 if szczur.ok[nr_pkt] is False:
-                    print(szczur.nazwa,nr_pkt)
+                    print(szczur.nazwa, nr_pkt)
                 if szczur.aktywnosc and szczur.ok[nr_pkt]:
                     sumab += szczur.By[nr_pkt]
                     sumaf += szczur.Fy[nr_pkt]
@@ -183,15 +183,15 @@ class Grupa(Dane):
         po_przecinku = 6
         print(8 * ' ', "K1", "K2", "R1", "R2", sep=11 * ' ')
         for par in ('k1', 'k2', 'r1', 'r2'):
-            str2prt +='{0[' + par + ']:' + str(szer_pola) + '.' + str(po_przecinku) + 'f}\t'
-        print(4*' ' + "Wartości: ", end='')
+            str2prt += '{0[' + par + ']:' + str(szer_pola) + '.' + str(po_przecinku) + 'f}\t'
+        print(4 * ' ' + "Wartości: ", end='')
         print(str2prt.format(self.outputy))
-        print(4*' ' + "   SEM-y: ", end='')
+        print(4 * ' ' + "   SEM-y: ", end='')
         print(str2prt.format(self.semy_outputow))
 
         # grupa jako kazdy osobno
-        print(8 * ' ', "K1", "K2", "R1", "R2", sep=12 * ' ',end='')
-        print(6*' ',"AKT")
+        print(8 * ' ', "K1", "K2", "R1", "R2", sep=12 * ' ', end='')
+        print(6 * ' ', "AKT")
         for nr, szczur in enumerate(self.szczury):
             str2prt = 'szcz_nr > ' + str(nr) + '<# '
             szer_pola = 11
@@ -200,8 +200,7 @@ class Grupa(Dane):
                 str2prt += '{0[' + par + ']:' + str(szer_pola) + '.' + str(po_przecinku) + 'f} | '
             print(str2prt.format(szczur.outputy), szczur.aktywnosc)
 
-
-    def wykres_grupy(self,zakres = None):
+    def wykres_grupy(self):
         '''
         tworzy wykres grupy z errorbarami razem dla zmian(ziel) i bez nich(nieb)
         :param [zakres = False] format: [[xmin,xmax],[ymin,ymax]] gdy zamiast krotki flasz - automatyczne
@@ -218,7 +217,7 @@ class Grupa(Dane):
         y = [scatchard_curv(i, *self.parametry_O) for i in x]
         plt.plot(x, y, 'b')
         plt.plot(x, y_zm, 'g-')
-        plt.legend(('bez zmian','ze zmianami'), loc='upper right')
+        plt.legend(('bez zmian', 'ze zmianami'), loc='upper right')
         szer_pola = 9
         po_przecinku = 6
         for nr_pkt_w_szczurze, [b, f, ok] in enumerate(zip(self.By, self.Fy,
@@ -233,28 +232,10 @@ class Grupa(Dane):
         for nr in range(len(self.By)):
             if self.ok[nr]:
                 numery.append(nr)
-        #bez tego sie robia brzydkie wykresy z naniesionymi cyframi - to zostawia tylko te w zakresie
-        for nr,(x,y) in list(zip(numery,list(zip(*self.zwrot_ok()[:2])))):
-            if bool(zakres):
-                if zakres[1][0] is not False:
-                    if zakres[1][0] <= y <= zakres[1][1]:
-                        if zakres[0][0] is not False:
-                            if zakres[0][0] <= x <= zakres[0][1]:
-                                plt.text(x, y, str(nr))
-                        else:
-                            plt.text(x, y, str(nr))
-                elif zakres[0][0] is not False:
-                    if zakres[0][0] <= x <= zakres[0][1]:
-                        plt.text(x, y, str(nr))
-            else:
-                plt.text(x, y, str(nr))
+        # bez tego sie robia brzydkie wykresy z naniesionymi cyframi - to zostawia tylko te w zakresie
+        for nr, (x, y) in list(zip(numery, list(zip(*self.zwrot_ok()[:2])))):
+            plt.text(x, y, str(nr))
 
-
-        if bool(zakres):
-            if zakres[1][0] is not False:
-                plt.ylim(zakres[1][0], zakres[1][1])
-            if zakres[0][0] is not False:
-                plt.xlim(zakres[0][0], zakres[0][1])
         plt.title("grupa " + self.nazwa)
         plt.grid()
         plt.show()
@@ -311,7 +292,6 @@ class Grupa(Dane):
         '''
 
 
-
 class Szczur(Dane):
     def __init__(self):
         super().__init__()
@@ -325,16 +305,14 @@ class Szczur(Dane):
     def aktywuj_szcz(self):
         self.aktywnosc = True
 
-    def wykres_szczura(self, zakres = None):
+    def wykres_szczura(self):
         '''
         rysuje wykres pojedynczego szczura ze zmianami (zielony) i bez nich (niebieski)
         :param [zakres = None] format: [[xmin,xmax],[ymin,ymax]] gdy zamiast krotki flasz - automatyczne
          uwzglednia zakres lub nie
         :return: nic
         '''
-        if zakres is None:
-            zakres = []
-        x = np.linspace(min(self.By)-0.1, max(self.By), 1000)
+        x = np.linspace(min(self.By) - 0.1, max(self.By), 1000)
 
         y = [scatchard_curv(i, *self.parametry) for i in x]
         y_O = [scatchard_curv(i, *self.parametry_O) for i in x]
@@ -347,15 +325,10 @@ class Szczur(Dane):
             if self.ok[nr]:
                 numery.append(nr)
 
-        for nr,(x,y) in list(zip(numery, list(zip(*self.zwrot_ok()[:2])))):
-            plt.text(x,y,str(nr))
+        for nr, (x, y) in list(zip(numery, list(zip(*self.zwrot_ok()[:2])))):
+            plt.text(x, y, str(nr))
         plt.plot(self.By, self.Fy, 'b*')
         plt.plot(*self.zwrot_ok()[:2], "r*")
-        if zakres:
-            if zakres[0][0] is not False:
-                plt.xlim(zakres[0][0], zakres[0][1])
-            if zakres[1][0] is not False:
-                plt.ylim(zakres[1][0], zakres[1][1])
         plt.title("szczur nr:" + str(self.nazwa))
         plt.grid()
         plt.show()
@@ -365,7 +338,15 @@ class Szczur(Dane):
         self.obl_parametry()
         self.obl_output()
 
+
 nazwy = ["1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m"]
+
+
+class Punkt:
+    def __init__(self):
+        self.x: int = -1
+        self.y: int = -1
+        self.active: bool = True
 
 
 def scatchard_curv(x, a, b, d, e):
@@ -400,7 +381,7 @@ def pdf_maker(grupy, zmiany=True):
         for grupa in grupy:
             color = colors[c_nr]
             y = [scatchard_curv(i, *grupa.parametry_O) for i in x]
-            plt.errorbar(grupa.zwrot_ok()[0], grupa.zwrot_ok()[1], grupa.zwrot_ok()[2],fmt=color + '*', ecolor=color)
+            plt.errorbar(grupa.zwrot_ok()[0], grupa.zwrot_ok()[1], grupa.zwrot_ok()[2], fmt=color + '*', ecolor=color)
             plt.plot(x, y, color + '-')
             c_nr += 1
     else:
@@ -476,8 +457,11 @@ def wejscie_ok(string, min, max):
         string = -1
     return string
 
-def gn(nr):
-    return ["1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m"][nr-1]
+
+def group_name(nr):
+    return ["1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m"][
+        nr - 1]
+
 
 def ii(str):
     try:
