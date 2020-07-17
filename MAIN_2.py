@@ -27,7 +27,7 @@ def main():
             print("podaj poprawny numer grupy")
             continue
         while True:
-            clean('clear')  # windows - cls
+            clean('clear')  # windows - cls todo uwzględnianie systemu operacyjnego
             if nr_fun in (5, 6, 7):
                 sel_group.aktualizacja_D()
                 with open('grupy.bin', 'rb') as plik:
@@ -171,13 +171,19 @@ def main():
                     else:
                         zapis_grup(grupy)
             if nr_fun == 11:
-                sel_group.obl_outpyty_sr()
+                sel_group.obl_outputy_sr()
                 print(sel_group.outputy_sr)
+                print(sel_group.outputy)
+                sel_group.obl_true_outputs()
+                print(sel_group.true_outputs)
+                print(sel_group.true_Fy)
+                print(sel_group.Fy)
+                print(sel_group.true_F_sems)
 
 
 if __name__ == "__main__":
-    try:
-        main()
-    except Exception as e:
-        with open('errors.txt', 'w') as plik_errors:
-            plik_errors.write(str(e))  # todo zapis całej wiadomości błędu
+    # try:
+    main()
+# except Exception as e:
+#     with open('errors.txt', 'w') as plik_errors:
+#         plik_errors.write(str(e))  # todo zapis całej wiadomości błędu

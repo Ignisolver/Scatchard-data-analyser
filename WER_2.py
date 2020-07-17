@@ -43,26 +43,10 @@ class Dane:
         self.ok = []
         # Lista zawierająca info o tym czy dany punkt (z By,Fy) jest uwzględniany przy liczeniu sem/ parametrow/outputow
         self.klasa = "Dane"
+        self.true_Fy = []
 
-    def obl_output(self):
-        """
-        oblicza k1,k2,r1,r2 i zapisuje w grupie
-        :param parametry: a,b,d,e
-        :return: None
-        """
-        # todo może to policzyć jako średnią ze szczurów
-        a, b, d, e = self.parametry
-        delta = abs(b ** 2 - 4 * a) ** (1 / 2)
-        k1 = (b - delta) / 2
-        k2 = b - k1
-        r1 = (d - e * k1) / (k1 ** 2 - k1 * k2)
-        r2 = (e + k1 * r1) / (-k2)
-        nazwy_outputow = ['k1', 'k2', 'r1', 'r2']
-        wart_outputow = [k1, k2, r1, r2]
-        for nr_out in range(len(nazwy_outputow)):
-            self.outputy[nazwy_outputow[nr_out]] = wart_outputow[nr_out]
 
-    def obl_parametry(self):
+    def obl_parametry(self, arg, wart):
         """
         dopasowuje parametry funkcji scatcharda do danych b i b/F
         :return: zapisuje parametry
@@ -70,7 +54,8 @@ class Dane:
         # if self.nazwa == "Szczur":
         #     sigma = [0.001 for i in range(len(self.By))]
         parametry_wejsciowe = np.array([1, 5, 1, 5])
-        self.parametry = curve_fit(scatchard_curv, self.zwrot_ok()[0], self.zwrot_ok()[1], p0=parametry_wejsciowe)[0]
+        # self.parametry = curve_fit(scatchard_curv, self.zwrot_ok()[0], self.zwrot_ok()[1], p0=parametry_wejsciowe)[0]
+        self.parametry = curve_fit(scatchard_curv, arg, wart, p0=parametry_wejsciowe)[0]
 
     def zwrot_ok(self):
         """
@@ -99,10 +84,13 @@ class Dane:
     def obl_sr_By_Fy_i_semy_pkt_grupy(self):
         pass
 
+    def obl_outputy_sr(self):
+        pass
+
     def aktualizacja_D(self):
         self.obl_sr_By_Fy_i_semy_pkt_grupy()
-        self.obl_parametry()
-        self.obl_output()
+        self.obl_parametry(*self.zwrot_ok()[:2])
+        self.obl_outputy_sr()
         self.obl_semy_outputow()
 
 
@@ -112,9 +100,11 @@ class Grupa(Dane):
         self.szczury = []
         self.klasa = "Grupa"
         self.outputy_sr = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
+        self.true_outputs = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
+        self.true_F_sems = []
         # Lista zawierajaca obiekty szczorow danej grupy
 
-    def obl_outpyty_sr(self):
+    def obl_outputy_sr(self):
         il_szczurow = len(self.szczury)
         for out in self.outputy_sr:
             lista = [self.szczury[i].outputy[out] for i in range(il_szczurow) if self.szczury[i].aktywnosc == 1]
@@ -190,10 +180,10 @@ class Grupa(Dane):
 
         print(8 * ' ', "K1", "K2", "R1", "R2", sep=12 * ' ')
         for par in ('k1', 'k2', 'r1', 'r2'):
-            str2prt += '{0[' + par + ']:' + str(szer_pola if par[1] == '2' else (szer_pola + 1))\
+            str2prt += '{0[' + par + ']:' + str(szer_pola if par[1] == '2' else (szer_pola + 1)) \
                        + '.' + str(po_przecinku) + 'f}\t'
         print(4 * ' ' + "Wartości: ", end='')
-        print(str2prt.format(self.outputy))
+        print(str2prt.format(self.outputy_sr))
         print(4 * ' ' + "   SEM-y: ", end='')
         print(str2prt.format(self.semy_outputow))
 
@@ -227,7 +217,7 @@ class Grupa(Dane):
         szer_pola = 9
         po_przecinku = 6
 
-        print('pkt nr>' + 5*' ' + 'B/F' + 11 * ' ' + 'B' + 9 * ' ' + 'aktywność')
+        print('pkt nr>' + 5 * ' ' + 'B/F' + 11 * ' ' + 'B' + 9 * ' ' + 'aktywność')
         for nr_pkt_w_szczurze, [b, f, ok] in enumerate(zip(self.By, self.Fy,
                                                            self.ok)):
             str2prt = ' {0:2}       '
@@ -274,11 +264,18 @@ class Grupa(Dane):
         plt.grid()
         plt.show()
 
-    def mediana(self):
-        '''
-        liczy mediane k i r z tablicy szczurów
-        :return: float mediana
-        '''
+    def obl_true_outputs(self):
+        for szczur in self.szczury:
+            szczur.true_Fy = [scatchard_curv(x, *szczur.parametry) for x in self.By]
+        for nr in range(len(self.By)):
+            Fy_od_danego_b = []
+            for szczur in self.szczury:
+                Fy_od_danego_b.append(szczur.true_Fy[nr])
+            self.true_Fy.append(mean(Fy_od_danego_b))
+            self.true_F_sems.append(sem(Fy_od_danego_b))
+        self.obl_parametry(self.By, self.true_Fy)
+        self.obl_output(self.parametry, self.true_outputs)
+        self.obl_parametry(self.By, self.Fy)
 
 
 class Szczur(Dane):
@@ -322,13 +319,32 @@ class Szczur(Dane):
         plt.grid()
         plt.show()
 
+    def obl_output(self, parametry, flag=None):
+        """
+        oblicza k1,k2,r1,r2 i zapisuje w grupie
+        :param parametry: a,b,d,e
+        :return: None
+        """
+        # todo może to policzyć jako średnią ze szczurów
+        a, b, d, e = parametry
+        delta = abs(b ** 2 - 4 * a) ** (1 / 2)
+        k1 = (b - delta) / 2
+        k2 = b - k1
+        r1 = (d - e * k1) / (k1 ** 2 - k1 * k2)
+        r2 = (e + k1 * r1) / (-k2)
+        nazwy_outputow = ['k1', 'k2', 'r1', 'r2']
+        wart_outputow = [k1, k2, r1, r2]
+        for nr_out in range(len(nazwy_outputow)):
+            if flag is None:
+                self.outputy[nazwy_outputow[nr_out]] = wart_outputow[nr_out]
+            else:
+                flag[nazwy_outputow[nr_out]] = wart_outputow[nr_out]
+
     def aktualizacja_S(self):
         self.obl_sr_By_Fy_i_semy_pkt_grupy()
-        self.obl_parametry()
-        self.obl_output()
+        self.obl_parametry(*self.zwrot_ok()[:2])
+        self.obl_output(self.parametry)
 
-
-nazwy = ["1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m"]
 
 
 class Punkt:
@@ -361,21 +377,22 @@ def pdf_maker(grupy, zmiany=True):
     '''
     plt.rcParams.update({'errorbar.capsize': 3})
     colors = ['r', 'b', 'g', 'm', 'y', 'k']
-    colors_full_name = {'r': "czerwony", 'b': 'niebieski', 'g': 'zielony', 'm': 'fioletowy', 'y': 'zółty', 'k': 'czarny'}
+    colors_full_name = {'r': "czerwony", 'b': 'niebieski', 'g': 'zielony', 'm': 'fioletowy', 'y': 'zółty',
+                        'k': 'czarny'}
     mx = max([max(grupa.zwrot_ok()[0]) for grupa in grupy])
     my = max([max(grupa.zwrot_ok()[1]) for grupa in grupy])
     x = np.linspace(0, mx, 500)
-    print("grupa" + 9*' ' + "kolor")
+    print("grupa" + 9 * ' ' + "kolor")
     legenda = ''
     for c_nr, grupa in enumerate(grupy):
         color = colors[c_nr]
-        param,By,Fy,semy = [grupa.parametry,grupa.zwrot_ok()[0], grupa.zwrot_ok()[1], grupa.zwrot_ok()[2]] if zmiany \
+        param, By, Fy, semy = [grupa.parametry, grupa.zwrot_ok()[0], grupa.zwrot_ok()[1], grupa.zwrot_ok()[2]] if zmiany \
             else [grupa.parametry_O, grupa.By, grupa.Fy, grupa.semy_punktow]
         y = [scatchard_curv(i, *param) for i in x]
         plt.errorbar(By, Fy, semy, fmt=color + '*', ecolor=color)
         plt.plot(x, y, color + '-')
         legenda += str(grupa.nazwa) + " | " + str(colors_full_name[colors[c_nr]] + '\n')
-    print(legenda+"\n legenda została zapisana w folderze wykresy pod nazwą wykresu z rozszezeniem '.txt'")
+    print(legenda + "\n legenda została zapisana w folderze wykresy pod nazwą wykresu z rozszezeniem '.txt'")
     nazwa = ''
     for grupa in grupy:
         nazwa += '+' + grupa.nazwa[3:]
@@ -447,11 +464,12 @@ def group_name(nr):
         nr - 1]
 
 
-def ii(str):
+def is_number(str):
     try:
         return float(input(str))
     except:
         return False
+
 
 def masakrator():
     """
