@@ -41,7 +41,7 @@ def main():
                            '7. Dezaktywuj/ aktywuj punkt w szczurze', '8. Stwórz pliki pdf uwzględniając zmiany',
                            '9. Zmien grupe', '10. EXIT']
             print(*str_funkcje, sep='\n')
-            nr_fun = wejscie_ok('Wpisz nr od 1 do 10 >>', 1, 10)
+            nr_fun = wejscie_ok('Wpisz nr od 1 do 10 >>', 1, 11)
             if nr_fun == -1:
                 print("podaj poprawny numer funkcji")
                 continue
@@ -171,6 +171,7 @@ def main():
                     else:
                         zapis_grup(grupy)
             if nr_fun == 11:
+                sel_group.obl_outpyty_sr()
                 print(sel_group.outputy_sr)
 
 

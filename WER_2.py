@@ -118,7 +118,7 @@ class Grupa(Dane):
         il_szczurow = len(self.szczury)
         for out in self.outputy_sr:
             lista = [self.szczury[i].outputy[out] for i in range(il_szczurow) if self.szczury[i].aktywnosc == 1]
-            self.semy_outputow.update({out: mean(lista)})
+            self.outputy_sr.update({out: mean(lista)})
 
     def obl_sr_sem_byify(self):
         """
