@@ -1,11 +1,9 @@
 import numpy as np
+from statistics import mean
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from pickle import load as read, dump as save
 
-
-# todo przetestowac funkcje
-# TODO napisac program glowny 1 kartka
 
 class Dane:
     def __init__(self):
@@ -52,6 +50,7 @@ class Dane:
         :param parametry: a,b,d,e
         :return: None
         """
+        # todo może to policzyć jako średnią ze szczurów
         a, b, d, e = self.parametry
         delta = abs(b ** 2 - 4 * a) ** (1 / 2)
         k1 = (b - delta) / 2
@@ -112,7 +111,14 @@ class Grupa(Dane):
         super().__init__()
         self.szczury = []
         self.klasa = "Grupa"
+        self.outputy_sr = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
         # Lista zawierajaca obiekty szczorow danej grupy
+
+    def obl_outpyty_sr(self):
+        il_szczurow = len(self.szczury)
+        for out in self.outputy_sr:
+            lista = [self.szczury[i].outputy[out] for i in range(il_szczurow) if self.szczury[i].aktywnosc == 1]
+            self.semy_outputow.update({out: mean(lista)})
 
     def obl_sr_sem_byify(self):
         """
@@ -153,8 +159,8 @@ class Grupa(Dane):
             listaf = []
             il_szczurow = len(self.szczury)
             for szczur in self.szczury:
-                if szczur.ok[nr_pkt] is False:
-                    print(szczur.nazwa, nr_pkt)
+                # if szczur.ok[nr_pkt] is False:
+                #     print(szczur.nazwa, nr_pkt)
                 if szczur.aktywnosc and szczur.ok[nr_pkt]:
                     sumab += szczur.By[nr_pkt]
                     sumaf += szczur.Fy[nr_pkt]
@@ -181,9 +187,11 @@ class Grupa(Dane):
         str2prt = ''
         szer_pola = 11
         po_przecinku = 6
-        print(8 * ' ', "K1", "K2", "R1", "R2", sep=11 * ' ')
+
+        print(8 * ' ', "K1", "K2", "R1", "R2", sep=12 * ' ')
         for par in ('k1', 'k2', 'r1', 'r2'):
-            str2prt += '{0[' + par + ']:' + str(szer_pola) + '.' + str(po_przecinku) + 'f}\t'
+            str2prt += '{0[' + par + ']:' + str(szer_pola if par[1] == '2' else (szer_pola + 1))\
+                       + '.' + str(po_przecinku) + 'f}\t'
         print(4 * ' ' + "Wartości: ", end='')
         print(str2prt.format(self.outputy))
         print(4 * ' ' + "   SEM-y: ", end='')
@@ -194,8 +202,6 @@ class Grupa(Dane):
         print(6 * ' ', "AKT")
         for nr, szczur in enumerate(self.szczury):
             str2prt = 'szcz_nr > ' + str(nr) + '<# '
-            szer_pola = 11
-            po_przecinku = 6
             for par in ('k1', 'k2', 'r1', 'r2'):
                 str2prt += '{0[' + par + ']:' + str(szer_pola) + '.' + str(po_przecinku) + 'f} | '
             print(str2prt.format(szczur.outputy), szczur.aktywnosc)
@@ -220,9 +226,11 @@ class Grupa(Dane):
         plt.legend(('bez zmian', 'ze zmianami'), loc='upper right')
         szer_pola = 9
         po_przecinku = 6
+
+        print('pkt nr>' + 5*' ' + 'B/F' + 11 * ' ' + 'B' + 9 * ' ' + 'aktywność')
         for nr_pkt_w_szczurze, [b, f, ok] in enumerate(zip(self.By, self.Fy,
                                                            self.ok)):
-            str2prt = 'pkt nr> {0:2} '
+            str2prt = ' {0:2}       '
             for os in ('1', '2'):
                 str2prt += '{' + os + ':' + str(szer_pola) + '.' + str(po_przecinku) + 'f}|\t'
             str2prt += '{3}'
@@ -240,7 +248,7 @@ class Grupa(Dane):
         plt.grid()
         plt.show()
 
-    def wykr_porown_szczury(self, nr, zmiany=True):
+    def wykr_porown_szczury(self, zmiany=True):
 
         '''
         funkcja pokazujaca wykresy wszystkich szczurow
@@ -251,37 +259,18 @@ class Grupa(Dane):
         :param zmiany: = True - pokazuje wykres ze zmianami, Flase - bez zmian
         :return: nic nie zwraca
         '''
-        if zmiany:
-            for ind, szczur in enumerate(self.szczury):
-                if szczur.aktywnosc and ind != nr:
-                    kolor = 'b'
 
-                    x = np.linspace(min(szczur.By), max(szczur.By), 1000)
-                    y = [scatchard_curv(i, *szczur.parametry) for i in x]
+        for ind, szczur in enumerate(self.szczury):
+            kolor = 'g'
 
-                    plt.plot(x, y, kolor + '-')
-                    # plt.plot(*szczur.zwrot_ok()[:2], kolor + '*')
-            # dla wybranego szczura
-            kolor = 'r'
-            x = np.linspace(min(self.szczury[nr].By), max(self.szczury[nr].By), 1000)
-            y = [scatchard_curv(i, *self.szczury[nr].parametry) for i in x]
+            x = np.linspace(min(szczur.By), max(szczur.By), 1000)
+            parametry = szczur.parametry if zmiany else szczur.parametry_O
+            y = [scatchard_curv(i, *parametry) for i in x]
+
             plt.plot(x, y, kolor + '-')
-            # plt.plot(*self.szczury[nr].zwrot_ok()[:2], kolor + '*')
-        else:
-            for ind, szczur in enumerate(self.szczury):
-                kolor = 'r' if ind == nr else 'b'
+            # plt.plot(szczur.By, szczur.Fy, kolor + '*')
 
-                x = np.linspace(min(szczur.By), max(szczur.By), 1000)
-                y_O = [scatchard_curv(i, *szczur.parametry_O) for i in x]
-
-                plt.plot(x, y_O, kolor + '-')
-                # plt.plot(szczur.By, szczur.Fy, kolor + '*')
-            kolor = 'r'
-            x = np.linspace(min(self.szczury[nr].By), max(self.szczury[nr].By), 1000)
-            y = [scatchard_curv(i, *self.szczury[nr].parametry_O) for i in x]
-            plt.plot(x, y, kolor + '-')
-            # plt.plot(self.szczury[nr].By, self.szczury[nr].Fy, kolor + '*')
-        plt.title('szczur nr ' + str(nr) + ' na czerwowno')
+        plt.title('wykres wszystkich szczurów')
         plt.grid()
         plt.show()
 
@@ -305,7 +294,7 @@ class Szczur(Dane):
     def aktywuj_szcz(self):
         self.aktywnosc = True
 
-    def wykres_szczura(self):
+    def wykres_szczura(self, nazwa_grupy):
         '''
         rysuje wykres pojedynczego szczura ze zmianami (zielony) i bez nich (niebieski)
         :param [zakres = None] format: [[xmin,xmax],[ymin,ymax]] gdy zamiast krotki flasz - automatyczne
@@ -316,9 +305,9 @@ class Szczur(Dane):
 
         y = [scatchard_curv(i, *self.parametry) for i in x]
         y_O = [scatchard_curv(i, *self.parametry_O) for i in x]
-        plt.plot(x, y, 'b-')
-        plt.plot(x, y_O, 'r-')
-        plt.legend(("ze zmianami", 'bez zmian'), loc='upper right')
+        plt.plot(x, y_O, 'b-')
+        plt.plot(x, y, 'g-')
+        plt.legend(('bez zmian', "ze zmianami"), loc='upper right')
 
         numery = []
         for nr in range(len(self.By)):
@@ -328,8 +317,8 @@ class Szczur(Dane):
         for nr, (x, y) in list(zip(numery, list(zip(*self.zwrot_ok()[:2])))):
             plt.text(x, y, str(nr))
         plt.plot(self.By, self.Fy, 'b*')
-        plt.plot(*self.zwrot_ok()[:2], "r*")
-        plt.title("szczur nr:" + str(self.nazwa))
+        plt.plot(*self.zwrot_ok()[:2], "g*")
+        plt.title("szczur nr: " + str(self.nazwa) + " z grupy: " + nazwa_grupy)
         plt.grid()
         plt.show()
 
@@ -372,28 +361,21 @@ def pdf_maker(grupy, zmiany=True):
     '''
     plt.rcParams.update({'errorbar.capsize': 3})
     colors = ['r', 'b', 'g', 'm', 'y', 'k']
-    color = colors[0]
-    c_nr = 0
-    if zmiany:
-        mx = max([max(grupa.zwrot_ok()[0]) for grupa in grupy])
-        my = max([max(grupa.zwrot_ok()[1]) for grupa in grupy])
-        x = np.linspace(0, mx, 500)
-        for grupa in grupy:
-            color = colors[c_nr]
-            y = [scatchard_curv(i, *grupa.parametry_O) for i in x]
-            plt.errorbar(grupa.zwrot_ok()[0], grupa.zwrot_ok()[1], grupa.zwrot_ok()[2], fmt=color + '*', ecolor=color)
-            plt.plot(x, y, color + '-')
-            c_nr += 1
-    else:
-        mx = max([max(i) for grupa in grupy for i in grupa.By])
-        my = max([max(i) for grupa in grupy for i in grupa.Fy])
-        x = np.linspace(0, mx, 500)
-        for grupa in grupy:
-            color = colors[c_nr]
-            y = [scatchard_curv(i, *grupa.pmarametry) for i in x]
-            plt.errorbar(grupa.By, grupa.Fy, grupa.semy_punktow, fmt=color + '*', ecolor=color)
-            plt.plot(x, y, 'r-')
-            c_nr += 1
+    colors_full_name = {'r': "czerwony", 'b': 'niebieski', 'g': 'zielony', 'm': 'fioletowy', 'y': 'zółty', 'k': 'czarny'}
+    mx = max([max(grupa.zwrot_ok()[0]) for grupa in grupy])
+    my = max([max(grupa.zwrot_ok()[1]) for grupa in grupy])
+    x = np.linspace(0, mx, 500)
+    print("grupa" + 9*' ' + "kolor")
+    legenda = ''
+    for c_nr, grupa in enumerate(grupy):
+        color = colors[c_nr]
+        param,By,Fy,semy = [grupa.parametry,grupa.zwrot_ok()[0], grupa.zwrot_ok()[1], grupa.zwrot_ok()[2]] if zmiany \
+            else [grupa.parametry_O, grupa.By, grupa.Fy, grupa.semy_punktow]
+        y = [scatchard_curv(i, *param) for i in x]
+        plt.errorbar(By, Fy, semy, fmt=color + '*', ecolor=color)
+        plt.plot(x, y, color + '-')
+        legenda += str(grupa.nazwa) + " | " + str(colors_full_name[colors[c_nr]] + '\n')
+    print(legenda+"\n legenda została zapisana w folderze wykresy pod nazwą wykresu z rozszezeniem '.txt'")
     nazwa = ''
     for grupa in grupy:
         nazwa += '+' + grupa.nazwa[3:]
@@ -405,8 +387,10 @@ def pdf_maker(grupy, zmiany=True):
     plt.xlabel('Bound Insulin (nmol/l)')
     plt.ylabel("Bound/Free Insulin")
     plt.grid()
-    plt.title(nazwa)
+    # plt.title(nazwa)
     plt.savefig("./wykresy/" + nazwa + ".svg", quality=95, format='svg')
+    with open("./wykresy/" + nazwa + ".txt", 'w') as plik_txt:
+        plik_txt.write(legenda)
     plt.show()
 
 
@@ -468,3 +452,9 @@ def ii(str):
         return float(input(str))
     except:
         return False
+
+def masakrator():
+    """
+    funkcja rozwiązująca scatcharda automatycznie...
+    :return:
+    """

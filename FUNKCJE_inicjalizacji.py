@@ -1,6 +1,8 @@
 from WER_2 import Grupa, Szczur
 from pickle import dump as save
 from copy import deepcopy as dcopy
+
+
 def import_grupy(nazwa_grupy):
     """
     pobiera dane
@@ -80,6 +82,8 @@ def all_groups_maker():
         GRUPY.update({nazwa_grupy: inicjalizacja_grupy(import_grupy(nazwa_grupy), nazwa_grupy)})
     return GRUPY
 
-def zapis_grup(grupy):
-    with open("grupy.bin", 'wb') as plik:
+def zapis_grup(grupy, par = None):
+    if par is None:
+        par = ['', '']
+    with open(par[0] + "grupy" + par[1] + ".bin", 'wb') as plik:
         save(grupy, plik)
