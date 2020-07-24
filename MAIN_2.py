@@ -4,7 +4,6 @@ from platform import system
 from FUNKCJE_inicjalizacji import *
 from WER_2 import *
 
-# Todo mechanizm doboru parametrow
 def main():
     try:
         with open('grupy.bin', 'rb') as plik:
@@ -38,9 +37,9 @@ def main():
                            "4. Pokaż wykres pojedyńczego szczura i jego dane",
                            '5. Dezaktywuj/ aktywuj punkt w grupie', '6. Dezaktywuj/ aktywuj szczura',
                            '7. Dezaktywuj/ aktywuj punkt w szczurze', '8. Stwórz pliki pdf uwzględniając zmiany',
-                           '9. Zmien grupe', '10. EXIT']
+                           '9. Zmien grupe', '10. EXIT/ zapis punktu przywracania', '11. Ładowanie punktu przywracania']
             print(*str_funkcje, sep='\n')
-            nr_fun = wejscie_ok('Wpisz nr od 1 do 10 >>', 1, 11)
+            nr_fun = wejscie_ok('Wpisz nr od 1 do 10 >>', 1, 1 + len(str_funkcje))
             if nr_fun == -1:
                 print("podaj poprawny numer funkcji")
                 continue
@@ -157,23 +156,26 @@ def main():
             if nr_fun == 9:
                 break
             if nr_fun == 10:
-                #  todo mechanizm wczytywania punktów przywracania
                 with open('grupy.bin', 'rb') as plik:
                     sel_group.aktualizacja_D()
                     if input("czy chcesz zapisać zmiany na ten moment jako punkt przywracania? "
                              "(enter-nie/coś innego - tak"):
                         now = datetime.now()
-                        zapis_grup(grupy, par=['.DATA/restore/', '-'.join(
+                        zapis_grup(grupy, par=['DATA/restore/','grupy_'+ '-'.join(
                             list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
-                        exit(0)
+
                     else:
                         zapis_grup(grupy)
+                        exit(0)
 
             if nr_fun == 11:
                 rest_result = restore()
                 grupy = grupy if rest_result == -1 else rest_result
 
             if nr_fun == 12:
+                masakrator(grupy)
+
+            if nr_fun == 13:
                 sel_group.obl_outputy_sr()
                 print(sel_group.outputy_sr)
                 print(sel_group.outputy)
@@ -186,7 +188,8 @@ def main():
 
 if __name__ == "__main__":
     # try:
-    main()
-# except Exception as e:
-#     with open('errors.txt', 'w') as plik_errors:
-#         plik_errors.write(str(e))  # todo zapis całej wiadomości błędu
+        main()
+        # raise MemoryError
+    # except Exception as e:
+    #     with open('errors.txt', 'w') as plik_errors:
+    #         plik_errors.write(str(e))  # todo zapis całej wiadomości błędu

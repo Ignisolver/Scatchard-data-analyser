@@ -4,6 +4,8 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from pickle import load as read, dump as save
 from os import listdir
+from copy import deepcopy as dcopy
+
 
 class Dane:
     def __init__(self):
@@ -325,7 +327,6 @@ class Szczur(Dane):
         :param parametry: a,b,d,e
         :return: None
         """
-        # todo może to policzyć jako średnią ze szczurów
         a, b, d, e = parametry
         delta = abs(b ** 2 - 4 * a) ** (1 / 2)
         k1 = (b - delta) / 2
@@ -411,13 +412,10 @@ def pdf_maker(grupy, zmiany=True):
     plt.show()
 
 
-def zapis_grup(grupy):
-    '''
-    zapisue grupy w pliku grupy.bin
-    :param grupy: grupy jako slownik
-    :return: nic
-    '''
-    with open("grupy.bin", 'wb') as plik:
+def zapis_grup(grupy, par=None):
+    if par is None:
+        par = ['', '']
+    with open(par[0] + "grupy" + par[1] + ".bin", 'wb') as plik:
         save(grupy, plik)
 
 
@@ -476,7 +474,7 @@ def restore():
         snapshots = listdir("DATA/restore")
         for nr, snap_name in enumerate(snapshots):
             print(nr, '. ', snap_name)
-        sel_snapshot_nr = wejscie_ok("wybierz plik do załadowania z listy podajac jego numer >>",1,len(snapshots))
+        sel_snapshot_nr = wejscie_ok("wybierz plik do załadowania z listy podajac jego numer >>",0,len(snapshots))
         if sel_snapshot_nr != -1:
             with open("DATA/restore/" + snapshots[sel_snapshot_nr], 'rb') as plik:
                 return read(plik)
@@ -487,8 +485,22 @@ def restore():
     return -1  # if something went wrong
 
 
-def masakrator():
+def masakrator(grupy):
     """
     funkcja rozwiązująca scatcharda automatycznie...
     :return:
+    todo:
+    0. stworzyć osobny plik grup
+    1. dla każdego szczura odjąć pierw 1 potem do 3 losowych punktów i sprawdzić odchylenia od punktów
+    - jak będą ok to zostawić dla minimalnej liczby punktów
+    - obliczyć dla danego szczura parametry wyjściowe
+    2.  z każdej grupy odjąć od 1 do max 1/3 szczórów i sprawdzić kiedy sem będzie najmniejsze
     """
+    mas_grups = list(grupy.values())
+    print(mas_grups)
+    for grupa in mas_grups:
+        print(grupa)
+        for szczur in grupa.szczury:
+            par, err = curve_fit(scatchard_curv, szczur.By, szczur.Fy, p0=np.array([1, 5, 1, 5]))
+            ...
+
