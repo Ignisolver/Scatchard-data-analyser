@@ -3,7 +3,7 @@ from statistics import mean
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from pickle import load as read, dump as save
-
+from os import listdir
 
 class Dane:
     def __init__(self):
@@ -469,6 +469,22 @@ def is_number(str):
         return float(input(str))
     except:
         return False
+
+
+def restore():
+    if "restore" in listdir("DATA"):
+        snapshots = listdir("DATA/restore")
+        for nr, snap_name in enumerate(snapshots):
+            print(nr, '. ', snap_name)
+        sel_snapshot_nr = wejscie_ok("wybierz plik do załadowania z listy podajac jego numer >>",1,len(snapshots))
+        if sel_snapshot_nr != -1:
+            with open("DATA/restore/" + snapshots[sel_snapshot_nr], 'rb') as plik:
+                return read(plik)
+        else:
+            print("niepoprawny numer!")
+    else:
+        print("nie ma folderu restore")
+    return -1  # if something went wrong
 
 
 def masakrator():

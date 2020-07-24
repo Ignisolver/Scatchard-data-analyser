@@ -1,9 +1,8 @@
 from datetime import datetime
 from os import system as clean
-
+from platform import system
 from FUNKCJE_inicjalizacji import *
 from WER_2 import *
-
 
 # Todo mechanizm doboru parametrow
 def main():
@@ -27,7 +26,7 @@ def main():
             print("podaj poprawny numer grupy")
             continue
         while True:
-            clean('clear')  # windows - cls todo uwzględnianie systemu operacyjnego
+            clean('clear' if system() == "Linux" else "cls")
             if nr_fun in (5, 6, 7):
                 sel_group.aktualizacja_D()
                 with open('grupy.bin', 'rb') as plik:
@@ -164,13 +163,17 @@ def main():
                     if input("czy chcesz zapisać zmiany na ten moment jako punkt przywracania? "
                              "(enter-nie/coś innego - tak"):
                         now = datetime.now()
-                        #  todo zabezpieczenie przed nadpisaniem
-                        zapis_grup(grupy, ['./restore/', '-'.join(
+                        zapis_grup(grupy, par=['.DATA/restore/', '-'.join(
                             list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
                         exit(0)
                     else:
                         zapis_grup(grupy)
+
             if nr_fun == 11:
+                rest_result = restore()
+                grupy = grupy if rest_result == -1 else rest_result
+
+            if nr_fun == 12:
                 sel_group.obl_outputy_sr()
                 print(sel_group.outputy_sr)
                 print(sel_group.outputy)
