@@ -66,16 +66,6 @@ class Dane:
             with open("errors.txt", 'w') as plik:
                 plik.write(str(e))
 
-    def zwrot_ok(self):
-        """
-        zwraca wartosci srednir by i fy punktow ktore sa aktywne
-        :return: [aktywne_by, aktywne Fy, semy aktywnych Fy]
-        """
-        by = [self.By[i] for i in range(len(self.By)) if self.ok[i]]
-        fy = [self.Fy[i] for i in range(len(self.Fy)) if self.ok[i]]
-        fy_s = [self.semy_punktow[i] for i in range(len(self.Fy)) if self.ok[i]]
-        ok_nrs = [i for i in range(len(self.By)) if self.ok[i]]
-        return [by, fy, fy_s,ok_nrs]
 
     def dezaktywuj_pkt(self, nr):
             self.ok[nr] = False
@@ -112,6 +102,19 @@ class Grupa(Dane):
         self.true_outputs = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
         self.true_F_sems = []
         # Lista zawierajaca obiekty szczorow danej grupy
+
+    def zwrot_ok(self):
+        """
+        - funkcja zmieniona --- nie dziala przez to generowanie wykresów - stara funkcja taka jak w szczurze
+        zwraca wartosci srednir by i fy punktow ktore sa aktywne
+        :return: [aktywne_by, aktywne Fy, semy aktywnych Fy]
+        """
+        by = [self.By[i] for i in range(len(self.By)) if self.ok[i]]
+        fy = [self.Fy[i] for i in range(len(self.Fy)) if self.ok[i]]
+        fy_s = [self.semy_punktow[i] for i in range(len(self.Fy)) if self.ok[i]]
+        ok_nrs = [i for i in range(len(self.szczury)) if self.szczury[i].aktywnosc is True]
+        return [ok_nrs,ok_nrs,ok_nrs,ok_nrs]
+
 
     def obl_outputy_sr(self):
         il_szczurow = len(self.szczury)
@@ -298,6 +301,17 @@ class Szczur(Dane):
     def dezaktywuj_szcz(self):
         self.aktywnosc = False
 
+    def zwrot_ok(self):
+        """
+        zwraca wartosci srednir by i fy punktow ktore sa aktywne
+        :return: [aktywne_by, aktywne Fy, semy aktywnych Fy]
+        """
+        by = [self.By[i] for i in range(len(self.By)) if self.ok[i]]
+        fy = [self.Fy[i] for i in range(len(self.Fy)) if self.ok[i]]
+        fy_s = [self.semy_punktow[i] for i in range(len(self.Fy)) if self.ok[i]]
+        ok_nrs = [i for i in range(len(self.By)) if self.ok[i]]
+        return [by, fy, fy_s,ok_nrs]
+
     def aktywuj_szcz(self):
         self.aktywnosc = True
 
@@ -448,7 +462,7 @@ def sem(lista):
     :return: sem listy
     '''
     if len(lista) in (0, 1):
-        print("")
+        print("error listy")
     return (sum([(x - sum(lista) / len(lista)) ** 2 for x in lista]) /
             (len(lista) - 1)) ** (1 / 2) / len(lista) ** (1 / 2)
 
@@ -540,17 +554,20 @@ def masakrator(grupa):
             szczur.dezaktywuj_pkt(nr_punktu)
         szczur.aktualizacja_S()
     #optymalizacja grupy
-    reachable_points_nrs = grupa.zwrot_ok()[3]
+    reachable_szczurs_nrs = grupa.zwrot_ok()[3]
     amount_szczurs = len(grupa.zwrot_ok()[0])
-    max_nr_dezaktiv = int(amount_szczurs / 3) + 1 - (amount_szczurs - len(reachable_points_nrs))
+    max_nr_dezaktiv = int(amount_szczurs / 3) + 1 - (amount_szczurs - len(reachable_szczurs_nrs))
     good_szczurs_nrs = []
     for il_inactiv_szczurs in range(1, max_nr_dezaktiv + 1):
-        all_comb = list(combinations(reachable_points_nrs, il_inactiv_szczurs))
+        all_comb = list(combinations(reachable_szczurs_nrs, il_inactiv_szczurs))
         good_szczurs_nrs.append([])
         min_sems = {'k1': 999, 'k2': 999, 'r1': 999, 'r2': 999}
         for comb in all_comb:
             for nr_szczura in comb:
-                grupa.szczury[nr_szczura].dezaktywuj_szcz()
+                try:
+                    grupa.szczury[nr_szczura].dezaktywuj_szcz()
+                except:
+                    print(grupa.szczury,len(grupa.szczury),nr_szczura,comb)
             try:
                 grupa.aktualizacja_D()
             except ArithmeticError:
@@ -568,13 +585,19 @@ def masakrator(grupa):
                 min_sems = dc(sems)
                 good_szczurs_nrs[il_inactiv_szczurs - 1] = comb
             for nr_szczura in comb:
-                grupa.szczury[nr_szczura].aktywuj_szcz()
+                try:
+                    grupa.szczury[nr_szczura].aktywuj_szcz()
+                except:
+                    print(grupa.szczury, len(grupa.szczury), nr_szczura, comb)
             grupa.aktualizacja_D()
     # print(good_szczurs_nrs)
     for nr_szczura in good_szczurs_nrs[2]:  # do ustalenia
         # print("dezaktywacja szczura: ", nr_szczura)
         grupa.szczury[nr_szczura].dezaktywuj_szcz()
-    grupa.aktualizacja_D()
+    try:
+        grupa.aktualizacja_D()
+    except:
+        print(grupa.zwrot_ok())
     # for szczur in grupa.szczury:
         # print(szczur.ok)
     print(grupa.nazwa,grupa.outputy_sr,grupa.semy_outputow,sep='\n',end='\n\n')

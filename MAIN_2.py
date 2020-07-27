@@ -174,14 +174,10 @@ def main():
 
             if nr_fun == 12:
                 for grupa in grupy.values():
-                    masakrator(grupa)
+                        masakrator(grupa)
 
             if nr_fun == 13:
-                gr_params0 = mean([szczur.parametry[0] for szczur in sel_group.szczury])
-                gr_params1 = mean([szczur.parametry[1] for szczur in sel_group.szczury])
-                gr_params2 = mean([szczur.parametry[2] for szczur in sel_group.szczury])
-                gr_params3 = mean([szczur.parametry[3] for szczur in sel_group.szczury])
-                print(gr_params0,gr_params1,gr_params2,gr_params3)
+                print(sel_group.nazwa,len(sel_group.szczury),sel_group.zwrot_ok())
 
 
 
