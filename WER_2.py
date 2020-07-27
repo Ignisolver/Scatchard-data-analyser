@@ -447,6 +447,8 @@ def sem(lista):
     :param lista: lista wartosci
     :return: sem listy
     '''
+    if len(lista) in (0, 1):
+        print("")
     return (sum([(x - sum(lista) / len(lista)) ** 2 for x in lista]) /
             (len(lista) - 1)) ** (1 / 2) / len(lista) ** (1 / 2)
 
@@ -509,7 +511,7 @@ def masakrator(grupa):
     2.  z każdej grupy odjąć od 1 do max 1/3 szczórów i sprawdzić kiedy sem będzie najmniejsze
     """
     grupa = dc(grupa)
-    print(grupa.nazwa)
+    # print(grupa.nazwa)
     for szczur in grupa.szczury:
         # optymalizacja szczura
         amount_points = len(szczur.zwrot_ok()[0])
@@ -534,32 +536,45 @@ def masakrator(grupa):
                 for nr_punktu in comb:
                     szczur.aktywuj_pkt(nr_punktu)
                 szczur.aktualizacja_S()
-        for nr_punktu in good_points_nrs[2]:
+        for nr_punktu in good_points_nrs[1]:  # do ustalenia
             szczur.dezaktywuj_pkt(nr_punktu)
         szczur.aktualizacja_S()
-    # optymalizacja grupy
-    amount_szczurs = len(grupa.szczury)
-    max_nr_dezaktiv = int(amount_szczurs / 3) + 1
-    min_sems = {'k1': 999, 'k2': 999, 'r1': 999, 'r2': 999}
-    good_szczurs_nrs = [None] * max_nr_dezaktiv
+    #optymalizacja grupy
+    reachable_points_nrs = grupa.zwrot_ok()[3]
+    amount_szczurs = len(grupa.zwrot_ok()[0])
+    max_nr_dezaktiv = int(amount_szczurs / 3) + 1 - (amount_szczurs - len(reachable_points_nrs))
+    good_szczurs_nrs = []
     for il_inactiv_szczurs in range(1, max_nr_dezaktiv + 1):
-        all_comb = list(combinations(range(amount_szczurs), il_inactiv_szczurs))
+        all_comb = list(combinations(reachable_points_nrs, il_inactiv_szczurs))
+        good_szczurs_nrs.append([])
+        min_sems = {'k1': 999, 'k2': 999, 'r1': 999, 'r2': 999}
         for comb in all_comb:
             for nr_szczura in comb:
                 grupa.szczury[nr_szczura].dezaktywuj_szcz()
-            grupa.aktualizacja_D()
+            try:
+                grupa.aktualizacja_D()
+            except ArithmeticError:
+                # print(grupa.nazwa, grupa.zwrot_ok())
+                pass
             sems = grupa.semy_outputow
             amount_wins = 0
             for sem_key in sems:
+                # print(sems,min_sems,sep='\n',end='\n\n')
                 if sems[sem_key] < min_sems[sem_key]:
                     amount_wins += 1
+
             if amount_wins > 2:
-                min_sems = sems
-                good_szczurs_nrs = comb
+                # print("win", sems)
+                min_sems = dc(sems)
+                good_szczurs_nrs[il_inactiv_szczurs - 1] = comb
             for nr_szczura in comb:
                 grupa.szczury[nr_szczura].aktywuj_szcz()
             grupa.aktualizacja_D()
-    for nr_szczura in good_szczurs_nrs:
+    # print(good_szczurs_nrs)
+    for nr_szczura in good_szczurs_nrs[2]:  # do ustalenia
+        # print("dezaktywacja szczura: ", nr_szczura)
         grupa.szczury[nr_szczura].dezaktywuj_szcz()
     grupa.aktualizacja_D()
-    print(grupa.outputy_sr,grupa.semy_outputow)
+    # for szczur in grupa.szczury:
+        # print(szczur.ok)
+    print(grupa.nazwa,grupa.outputy_sr,grupa.semy_outputow,sep='\n',end='\n\n')
