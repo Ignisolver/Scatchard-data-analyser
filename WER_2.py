@@ -4,7 +4,8 @@ from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
 from pickle import load as read, dump as save
 from os import listdir
-from copy import deepcopy as dcopy
+from itertools import combinations
+from copy import deepcopy as dc
 
 
 class Dane:
@@ -32,7 +33,7 @@ class Dane:
         self.semy_outputow_O = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
         # Słownik zawierający orginalne wartosci SEM : k1,r1,k2,r2
         # dla grupy - wartosci srednie
-        self.outputy = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
+
         # Słownik zawierający wartosci: k1,r1,k2,r2
         # dla grupy - wartosci srednie
         self.outputy_O = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
@@ -55,9 +56,15 @@ class Dane:
         """
         # if self.nazwa == "Szczur":
         #     sigma = [0.001 for i in range(len(self.By))]
-        parametry_wejsciowe = np.array([1, 5, 1, 5])
+        parametry_wejsciowe = np.array(
+            [1, 4, 1, 4])
+        # todo dobor tych parametrów i zabezpieczenie bledu jak sie nie uda dobrać
         # self.parametry = curve_fit(scatchard_curv, self.zwrot_ok()[0], self.zwrot_ok()[1], p0=parametry_wejsciowe)[0]
-        self.parametry = curve_fit(scatchard_curv, arg, wart, p0=parametry_wejsciowe)[0]
+        try:
+            self.parametry = curve_fit(scatchard_curv, arg, wart, p0=parametry_wejsciowe)[0]
+        except RuntimeError or ZeroDivisionError as e:
+            with open("errors.txt", 'w') as plik:
+                plik.write(str(e))
 
     def zwrot_ok(self):
         """
@@ -67,11 +74,11 @@ class Dane:
         by = [self.By[i] for i in range(len(self.By)) if self.ok[i]]
         fy = [self.Fy[i] for i in range(len(self.Fy)) if self.ok[i]]
         fy_s = [self.semy_punktow[i] for i in range(len(self.Fy)) if self.ok[i]]
-        return [by, fy, fy_s]
+        ok_nrs = [i for i in range(len(self.By)) if self.ok[i]]
+        return [by, fy, fy_s,ok_nrs]
 
     def dezaktywuj_pkt(self, nr):
-        self.ok[nr] = False
-
+            self.ok[nr] = False
     def aktywuj_pkt(self, nr):
         self.ok[nr] = True
 
@@ -208,7 +215,7 @@ class Grupa(Dane):
         # format errorbarow z daszkiem
         plt.rcParams.update({'errorbar.capsize': 3})
         plt.errorbar(self.By, self.Fy, self.semy_punktow_O, fmt='b*', ecolor='b')
-        plt.errorbar(*self.zwrot_ok(), fmt='g*', ecolor='g')
+        plt.errorbar(*self.zwrot_ok()[0:3], fmt='g*', ecolor='g')
         # rysowanie lini
         x = np.linspace(min(self.By), max(self.By), 500)
         y_zm = [scatchard_curv(i, *self.parametry) for i in x]
@@ -283,6 +290,7 @@ class Grupa(Dane):
 class Szczur(Dane):
     def __init__(self):
         super().__init__()
+        self.outputy = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
         self.aktywnosc = True
         self.klasa = "Szczur"
         # info czy dany szczur ma wplyw na wyniki grupy
@@ -331,8 +339,12 @@ class Szczur(Dane):
         delta = abs(b ** 2 - 4 * a) ** (1 / 2)
         k1 = (b - delta) / 2
         k2 = b - k1
-        r1 = (d - e * k1) / (k1 ** 2 - k1 * k2)
-        r2 = (e + k1 * r1) / (-k2)
+        try:
+            r1 = (d - e * k1) / (k1 ** 2 - k1 * k2)
+            r2 = (e + k1 * r1) / (-k2)
+        except ZeroDivisionError:
+            r1 = (d - e * k1) / (k1 ** 2 - k1 * k2+0.001)
+            r2 = (e + k1 * r1) / (-k2+0.001)
         nazwy_outputow = ['k1', 'k2', 'r1', 'r2']
         wart_outputow = [k1, k2, r1, r2]
         for nr_out in range(len(nazwy_outputow)):
@@ -485,7 +497,7 @@ def restore():
     return -1  # if something went wrong
 
 
-def masakrator(grupy):
+def masakrator(grupa):
     """
     funkcja rozwiązująca scatcharda automatycznie...
     :return:
@@ -496,11 +508,58 @@ def masakrator(grupy):
     - obliczyć dla danego szczura parametry wyjściowe
     2.  z każdej grupy odjąć od 1 do max 1/3 szczórów i sprawdzić kiedy sem będzie najmniejsze
     """
-    mas_grups = list(grupy.values())
-    print(mas_grups)
-    for grupa in mas_grups:
-        print(grupa)
-        for szczur in grupa.szczury:
-            par, err = curve_fit(scatchard_curv, szczur.By, szczur.Fy, p0=np.array([1, 5, 1, 5]))
-            ...
-
+    grupa = dc(grupa)
+    print(grupa.nazwa)
+    for szczur in grupa.szczury:
+        # optymalizacja szczura
+        amount_points = len(szczur.zwrot_ok()[0])
+        max_nr_dezaktiv = int(amount_points/3) + 1
+        min_diff = [9] * max_nr_dezaktiv
+        good_points_nrs = []
+        reachable_points_nrs = szczur.zwrot_ok()[3]
+        max_nr_dezaktiv = int(amount_points/ 3) + 1 - (amount_points - len(reachable_points_nrs))
+        for il_inactiv_points in range(1, max_nr_dezaktiv+1):
+            good_points_nrs.append([])
+            all_comb = list(combinations(reachable_points_nrs, il_inactiv_points))
+            for comb in all_comb:
+                for nr_punktu in comb:
+                    szczur.dezaktywuj_pkt(nr_punktu)
+                szczur.aktualizacja_S()
+                par = szczur.parametry
+                diff = sum([abs(scatchard_curv(szczur.zwrot_ok()[0][point_nr], *par) - szczur.zwrot_ok()[1][point_nr])
+                            for point_nr in range(amount_points - il_inactiv_points)])
+                if diff < min_diff[il_inactiv_points - 1]:
+                    min_diff[il_inactiv_points - 1] = diff
+                    good_points_nrs[il_inactiv_points - 1] = comb
+                for nr_punktu in comb:
+                    szczur.aktywuj_pkt(nr_punktu)
+                szczur.aktualizacja_S()
+        for nr_punktu in good_points_nrs[2]:
+            szczur.dezaktywuj_pkt(nr_punktu)
+        szczur.aktualizacja_S()
+    # optymalizacja grupy
+    amount_szczurs = len(grupa.szczury)
+    max_nr_dezaktiv = int(amount_szczurs / 3) + 1
+    min_sems = {'k1': 999, 'k2': 999, 'r1': 999, 'r2': 999}
+    good_szczurs_nrs = [None] * max_nr_dezaktiv
+    for il_inactiv_szczurs in range(1, max_nr_dezaktiv + 1):
+        all_comb = list(combinations(range(amount_szczurs), il_inactiv_szczurs))
+        for comb in all_comb:
+            for nr_szczura in comb:
+                grupa.szczury[nr_szczura].dezaktywuj_szcz()
+            grupa.aktualizacja_D()
+            sems = grupa.semy_outputow
+            amount_wins = 0
+            for sem_key in sems:
+                if sems[sem_key] < min_sems[sem_key]:
+                    amount_wins += 1
+            if amount_wins > 2:
+                min_sems = sems
+                good_szczurs_nrs = comb
+            for nr_szczura in comb:
+                grupa.szczury[nr_szczura].aktywuj_szcz()
+            grupa.aktualizacja_D()
+    for nr_szczura in good_szczurs_nrs:
+        grupa.szczury[nr_szczura].dezaktywuj_szcz()
+    grupa.aktualizacja_D()
+    print(grupa.outputy_sr,grupa.semy_outputow)

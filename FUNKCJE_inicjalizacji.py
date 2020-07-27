@@ -63,7 +63,7 @@ def inicjalizacja_grupy(pobrane_dane, nazwa):
     grupa.obl_parametry(*grupa.zwrot_ok()[0:2])
     grupa.parametry_O = dcopy(grupa.parametry)
     grupa.obl_outputy_sr()
-    grupa.outputy_O = dcopy(grupa.outputy)
+    grupa.outputy_O = dcopy(grupa.outputy_sr)
     grupa.obl_semy_outputow()
     grupa.semy_outputow_O = dcopy(grupa.semy_outputow)
     for szczur in grupa.szczury:

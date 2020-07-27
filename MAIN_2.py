@@ -39,7 +39,7 @@ def main():
                            '7. Dezaktywuj/ aktywuj punkt w szczurze', '8. Stwórz pliki pdf uwzględniając zmiany',
                            '9. Zmien grupe', '10. EXIT/ zapis punktu przywracania', '11. Ładowanie punktu przywracania']
             print(*str_funkcje, sep='\n')
-            nr_fun = wejscie_ok('Wpisz nr od 1 do 10 >>', 1, 1 + len(str_funkcje))
+            nr_fun = wejscie_ok('Wpisz nr od 1 do 10 >>', 1, 13)  #  todo 1 + len(str_funkcje))
             if nr_fun == -1:
                 print("podaj poprawny numer funkcji")
                 continue
@@ -54,7 +54,7 @@ def main():
                 sel_group.wykres_grupy()
                 a = input("nacisnij enter aby kontynuować")
                 continue
-
+            # todo co z nr 3
             if nr_fun == 4:
                 il_szcz = len(sel_group.szczury) - 1
                 nr_szcz = wejscie_ok("podaj nr szczura (od 0 do " + str(il_szcz) + ">> ",
@@ -173,17 +173,15 @@ def main():
                 grupy = grupy if rest_result == -1 else rest_result
 
             if nr_fun == 12:
-                masakrator(grupy)
+                masakrator(sel_group)
 
             if nr_fun == 13:
-                sel_group.obl_outputy_sr()
-                print(sel_group.outputy_sr)
-                print(sel_group.outputy)
-                sel_group.obl_true_outputs()
-                print(sel_group.true_outputs)
-                print(sel_group.true_Fy)
-                print(sel_group.Fy)
-                print(sel_group.true_F_sems)
+                gr_params0 = mean([szczur.parametry[0] for szczur in sel_group.szczury])
+                gr_params1 = mean([szczur.parametry[1] for szczur in sel_group.szczury])
+                gr_params2 = mean([szczur.parametry[2] for szczur in sel_group.szczury])
+                gr_params3 = mean([szczur.parametry[3] for szczur in sel_group.szczury])
+                print(gr_params0,gr_params1,gr_params2,gr_params3)
+
 
 
 if __name__ == "__main__":
