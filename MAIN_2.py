@@ -161,7 +161,7 @@ def main():
                     if input("czy chcesz zapisać zmiany na ten moment jako punkt przywracania? "
                              "(enter-nie/coś innego - tak"):
                         now = datetime.now()
-                        zapis_grup(grupy, par=['DATA/restore/','grupy_'+ '-'.join(
+                        zapis_grup(grupy, par=['DATA/restore/grupy' + '-'.join(
                             list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
 
                     else:
@@ -171,14 +171,22 @@ def main():
             if nr_fun == 11:
                 rest_result = restore()
                 grupy = grupy if rest_result == -1 else rest_result
+                grupy['4 - SDR_w'].podsum_grupy()
+                zapis_grup(grupy)
+                break
 
             if nr_fun == 12:
+                mas_dict = {}
+                now = datetime.now()
                 for grupa in grupy.values():
-                        masakrator(grupa)
+                        mas_dict.update({grupa.nazwa: masakrator(grupa)})
+                zapis_grup(mas_dict, par=['DATA/restore/grupy_masakrator' + '-'.join(
+                    list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
 
             if nr_fun == 13:
-                print(sel_group.nazwa,len(sel_group.szczury),sel_group.zwrot_ok())
-
+                for szczur in sel_group.szczury:
+                    tab = [True if i in szczur.zwrot_ok()[3] else False for i in range(len(szczur.By))]
+                    print('szczur nr: ', szczur.nazwa, ' : ', tab)
 
 
 if __name__ == "__main__":
