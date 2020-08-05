@@ -6,7 +6,7 @@ from pickle import load as read, dump as save
 from os import listdir
 from itertools import combinations
 from copy import deepcopy as dc
-
+#todo zakoentować nieużywane funckcje
 
 class Dane:
     def __init__(self):
@@ -51,8 +51,8 @@ class Dane:
 
     def obl_parametry(self, arg, wart):
         """
-        dopasowuje parametry funkcji scatcharda do danych b i b/F
-        :return: zapisuje parametry
+        dopasowuje parametry funkcji scatcharda do danych b i b/F -
+        :return: zapisuje parametry jako self.parametry
         """
         # if self.nazwa == "Szczur":
         #     sigma = [0.001 for i in range(len(self.By))]
@@ -70,8 +70,20 @@ class Dane:
 
 
     def dezaktywuj_pkt(self, nr):
-            self.ok[nr] = False
+        '''
+        -w grupie dezaktywuje punkt na wykresie końcowym - już nie aktualne - zmiana koncepcji
+        (wykres końcowy nie ma sensu)
+        - w szczurze dezaktywuje jeden z jego punktów
+        :param nr: numer punktu od 0 - to chyba od prawej strony w osi x
+        :return:
+        '''
+        self.ok[nr] = False
     def aktywuj_pkt(self, nr):
+        '''
+        analogicznie do powyższej
+        :param nr:
+        :return:
+        '''
         self.ok[nr] = True
 
     # jedynie deklaracje:
@@ -89,11 +101,6 @@ class Dane:
         pass
     def zwrot_ok(self):
         pass
-    def aktualizacja_D(self):
-        # self.obl_sr_By_Fy_i_semy_pkt_grupy()
-        self.obl_parametry(*self.zwrot_ok()[:2])
-        self.obl_outputy_sr()
-        self.obl_semy_outputow()
 
 
 class Grupa(Dane):
@@ -108,18 +115,20 @@ class Grupa(Dane):
 
     def zwrot_ok(self):
         """
-        - funkcja zmieniona --- nie dziala przez to generowanie wykresów - stara funkcja taka jak w szczurze
-        zwraca wartosci srednir by i fy punktow ktore sa aktywne
-        :return: [aktywne_by, aktywne Fy, semy aktywnych Fy]
+        - funkcja zmieniona --- (nie dziala przez to generowanie wykresów) - stara funkcja taka jak w szczurze
+        numery aktywnych szczurów
+        :return: [[numery aktywnych punktów], x4]
         """
-        by = [self.By[i] for i in range(len(self.By)) if self.ok[i]]
-        fy = [self.Fy[i] for i in range(len(self.Fy)) if self.ok[i]]
-        fy_s = [self.semy_punktow[i] for i in range(len(self.Fy)) if self.ok[i]]
         ok_nrs = [i for i in range(len(self.szczury)) if self.szczury[i].aktywnosc is True]
         return [ok_nrs,ok_nrs,ok_nrs,ok_nrs]
 
 
     def obl_outputy_sr(self):
+        '''
+        oblicza średnie wartości wyników końcowych końcowych robiąc średnią ze szczurów
+        - to jej wyniki wedłóg nowej koncepcji są prawidłowe
+        :return: zapisuje w self.outputy_sr
+        '''
         il_szczurow = len(self.szczury)
         for out in self.outputy_sr:
             lista = [self.szczury[i].outputy[out] for i in range(il_szczurow) if self.szczury[i].aktywnosc == 1]
@@ -127,7 +136,8 @@ class Grupa(Dane):
 
     def obl_sr_sem_byify(self):
         """
-        oblicza srednie wartosci by i fy z aktywnych szczurow i je zapisuje
+        oblicza srednie wartosci SEM by i fy z aktywnych szczurow i je zapisuje
+        todo zobaczyć czy jest potrzebna i czy aby nie psuje programu
         :return: None
         """
         by_punktow = list(zip(
@@ -153,6 +163,7 @@ class Grupa(Dane):
         '''
         oblicza i zaapisuje srednie wartosci by i fy dla danej grupy na podstawie danych w szczurach
         uwzglednia zmiany
+        - funkcja nieaktualna - służyla do wykresu końcowego
         :return:
         '''
         sr_by = []
@@ -216,6 +227,7 @@ class Grupa(Dane):
         tworzy wykres grupy z errorbarami razem dla zmian(ziel) i bez nich(nieb)
         :param [zakres = False] format: [[xmin,xmax],[ymin,ymax]] gdy zamiast krotki flasz - automatyczne
          uwzglednia zakres lub nie
+         - nieaktualna
         :return:
         '''
         # format errorbarow z daszkiem
@@ -257,8 +269,6 @@ class Grupa(Dane):
 
         '''
         funkcja pokazujaca wykresy wszystkich szczurow
-        dany numerem szczur na czerwono
-        reszta na niebiesko
         zmiany lub bez nich sa okreslane paremetrem
         :param nr: numer szczura do zestawienia z reszta
         :param zmiany: = True - pokazuje wykres ze zmianami, Flase - bez zmian
@@ -275,12 +285,19 @@ class Grupa(Dane):
 
                 plt.plot(x, y, kolor + '-')
                 # plt.plot(szczur.By, szczur.Fy, kolor + '*')
-
-        plt.title('wykres aktywnych szczurów')
+        if zmiany:
+            plt.title('wykres aktywnych szczurów')
+        else:
+            plt.title('wykres wszystkich szczurów')
         plt.grid()
         plt.show()
 
     def obl_true_outputs(self):
+        """
+        funkcja służąca do obliczenia średnich wartości b i f dla grupy w celu lepszego rysowania wykresu
+        - nieaktualna
+        :return:
+        """
         for szczur in self.szczury:
             szczur.true_Fy = [scatchard_curv(x, *szczur.parametry) for x in self.By]
         for nr in range(len(self.By)):
@@ -290,9 +307,21 @@ class Grupa(Dane):
             self.true_Fy.append(mean(Fy_od_danego_b))
             self.true_F_sems.append(sem(Fy_od_danego_b))
         self.obl_parametry(self.By, self.true_Fy)
-        self.obl_output(self.parametry, self.true_outputs)
+        self.obl_output(self.parametry, self.true_outputs)  #todo gdzie to jest???
         self.obl_parametry(self.By, self.Fy)
 
+    def aktualizacja_D(self):
+        '''
+        aktualizuje:
+        - parametry
+        - srednie outputy szczurów
+        - semy wyników k i r
+        :return:
+        '''
+        # self.obl_sr_By_Fy_i_semy_pkt_grupy()
+        self.obl_parametry(*self.zwrot_ok()[:2])
+        self.obl_outputy_sr()
+        self.obl_semy_outputow()
 
 class Szczur(Dane):
     def __init__(self):
@@ -303,12 +332,16 @@ class Szczur(Dane):
         # info czy dany szczur ma wplyw na wyniki grupy
 
     def dezaktywuj_szcz(self):
+        """
+        dezaktywuje szczura
+        :return:
+        """
         self.aktywnosc = False
 
     def zwrot_ok(self):
         """
         zwraca wartosci srednir by i fy punktow ktore sa aktywne
-        :return: [aktywne_by, aktywne Fy, semy aktywnych Fy]
+        :return: [aktywne_by, aktywne Fy, semy aktywnych Fy, numery aktywnych punktów]
         """
         by = [self.By[i] for i in range(len(self.By)) if self.ok[i]]
         fy = [self.Fy[i] for i in range(len(self.Fy)) if self.ok[i]]
@@ -317,13 +350,16 @@ class Szczur(Dane):
         return [by, fy, fy_s,ok_nrs]
 
     def aktywuj_szcz(self):
+        """
+        aktywuje szczura
+        :return:
+        """
         self.aktywnosc = True
 
     def wykres_szczura(self, nazwa_grupy):
         '''
         rysuje wykres pojedynczego szczura ze zmianami (zielony) i bez nich (niebieski)
-        :param [zakres = None] format: [[xmin,xmax],[ymin,ymax]] gdy zamiast krotki flasz - automatyczne
-         uwzglednia zakres lub nie
+        :param nazwa_grupy: do napisania na wykresie
         :return: nic
         '''
         x = np.linspace(min(self.By) - 0.1, max(self.By), 1000)
@@ -373,13 +409,21 @@ class Szczur(Dane):
                 flag[nazwy_outputow[nr_out]] = wart_outputow[nr_out]
 
     def aktualizacja_S(self):
-        self.obl_sr_By_Fy_i_semy_pkt_grupy()
+        """
+        aktualizuje szczura:
+        - parametry funkcji
+        - wyniki końcowe
+        :return:
+        """
         self.obl_parametry(*self.zwrot_ok()[:2])
         self.obl_output(self.parametry)
 
 
 
 class Punkt:
+    """
+    do ewentualnego zastosowania w przyszłości
+    """
     def __init__(self):
         self.x: int = -1
         self.y: int = -1
@@ -389,6 +433,7 @@ class Punkt:
 def scatchard_curv(x, a, b, d, e):
     """
     warring for absolute delta
+    oblicza wartość funkcji scatcharda w x
     :param x: argument
     :params a, b, c, d: function parameters
     :return: value of the scatchard function
@@ -403,6 +448,7 @@ def scatchard_curv(x, a, b, d, e):
 def pdf_maker(grupy, zmiany=True):
     '''
     tworzy pdfy z danych w liscie grup
+    - nieaktualna
     :param grupy: lista grup
     :param zmiany: wykesy bez/z zmianami
     :return: zapisuje pdfy
@@ -444,8 +490,14 @@ def pdf_maker(grupy, zmiany=True):
 
 
 def zapis_grup(grupy, par=None):
+    """
+    zapisuje binarny plik grupy pod nazwą i ścieżką par
+    :param grupy: słownik z grupami
+    :param par: ścieżka
+    :return:
+    """
     if par is None:
-        par = ['', '']
+        par = "grupy"
     with open(par[0] + ".bin", 'wb') as plik:
         save(grupy, plik)
 
@@ -491,18 +543,33 @@ def wejscie_ok(string, min, max):
 
 
 def group_name(nr):
+    """
+    zwraca nazwe grupy z danym numerem do użycia w słowniku
+    :param nr:numer grupy <1,8>
+    :return:
+    """
     return ["1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m"][
         nr - 1]
 
 
-def is_number(str):
+def is_number(string: str) -> float:
+    """
+    zwraca wpisany float jak sie da a jak nie to False
+    :param string: string do input()
+    :return:
+    """
     try:
-        return float(input(str))
+        return float(input(string))
     except:
         return False
 
 
 def restore():
+    """
+    pozwala załadować zrobioną wcześniej migawkę
+    - zobaczyć czy działa
+    :return: słownik grupy albo False jak coś poszło nie tak
+    """
     if "restore" in listdir("DATA"):
         snapshots = listdir("DATA/restore")
         for nr, snap_name in enumerate(snapshots):
@@ -523,7 +590,9 @@ def masakrator(grupa):
     """
     funkcja rozwiązująca scatcharda automatycznie...
     :return:
-    todo:
+    todo: optymalizacja szczurów tak żeby było najmnejsze sem
+    todo: lepsze kryteria - szczególnie sem
+    todo: rozbić na mniejsze funkcje i skomentować
     0. stworzyć osobny plik grup
     1. dla każdego szczura odjąć pierw 1 potem do 3 losowych punktów i sprawdzić odchylenia od punktów
     - jak będą ok to zostawić dla minimalnej liczby punktów

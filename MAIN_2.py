@@ -17,7 +17,6 @@ def main():
         clean('clear')  # windows - cls
         print("wybierz grupę którą chcesz się zająć:")
         print("1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m")
-        g_n = ["1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m"]
         nr_gr = wejscie_ok("Wpisz nr od 1 do 8 >>", 1, 8)
         if nr_gr != -1:
             sel_group = grupy[group_name(nr_gr)]
