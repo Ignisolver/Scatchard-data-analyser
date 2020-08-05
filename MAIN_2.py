@@ -3,6 +3,7 @@ from os import system as clean
 from platform import system
 from FUNKCJE_inicjalizacji import *
 from WER_2 import *
+from time import  sleep
 
 def main():
     try:
@@ -178,14 +179,15 @@ def main():
                 mas_dict = {}
                 now = datetime.now()
                 for grupa in grupy.values():
-                        mas_dict.update({grupa.nazwa: masakrator(grupa)})
+                    mas_dict.update({grupa.nazwa: masakrator(grupa)})
                 zapis_grup(mas_dict, par=['DATA/restore/grupy_masakrator' + '-'.join(
                     list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
 
             if nr_fun == 13:
-                for szczur in sel_group.szczury:
-                    tab = [True if i in szczur.zwrot_ok()[3] else False for i in range(len(szczur.By))]
-                    print('szczur nr: ', szczur.nazwa, ' : ', tab)
+                cfr = curve_fit(scatchard_curv, *sel_group.szczury[0].zwrot_ok()[0:2])
+                print(sel_group.szczury[0].zwrot_ok()[3])
+                for i in cfr:
+                    print(i)
 
 
 if __name__ == "__main__":

@@ -6,7 +6,9 @@ from pickle import load as read, dump as save
 from os import listdir
 from itertools import combinations
 from copy import deepcopy as dc
-#todo zakoentować nieużywane funckcje
+
+
+# todo zakoentować nieużywane funckcje
 
 class Dane:
     def __init__(self):
@@ -39,7 +41,7 @@ class Dane:
         self.outputy_O = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
         # Słownik zawierający oryginalne wartosci: k1,r1,k2,r2
         # dla grupy - wartosci srednie
-        self.parametry = []
+        self.parametry = [None] * 4  # k1,k2,r1,r2
         # Lista zawierajaca parametry hiperboli: a, b, d, e
         self.parametry_O = []
         # Lista orginalnych parametrow
@@ -47,7 +49,6 @@ class Dane:
         # Lista zawierająca info o tym czy dany punkt (z By,Fy) jest uwzględniany przy liczeniu sem/ parametrow/outputow
         self.klasa = "Dane"
         self.true_Fy = []
-
 
     def obl_parametry(self, arg, wart):
         """
@@ -58,15 +59,19 @@ class Dane:
         #     sigma = [0.001 for i in range(len(self.By))]
         parametry_wejsciowe = np.array(
             [1, 4, 1, 4])
-        # todo dobor tych parametrów i zabezpieczenie bledu jak sie nie uda dobrać
+        # todo dobor tych parametrów i zabezpieczenie bledu jak sie nie uda dobrać - jak sie nie da to losuje inne
         # self.parametry = curve_fit(scatchard_curv, self.zwrot_ok()[0], self.zwrot_ok()[1], p0=parametry_wejsciowe)[0]
         try:
             # if len(arg) <= 4 or len(wart) != len(arg):
-                # print(len(arg),len(wart))
+            # print(len(arg),len(wart))
+            if len(arg) <= 2:
+                print(self.nazwa, self.zwrot_ok(), len(self.szczury))
             self.parametry = curve_fit(scatchard_curv, arg, wart, p0=parametry_wejsciowe)[0]
         except RuntimeError or ZeroDivisionError as e:
             with open("errors.txt", 'w') as plik:
                 plik.write(str(e))
+        except:
+            print(arg, wart,parametry_wejsciowe)
 
 
     def dezaktywuj_pkt(self, nr):
@@ -78,6 +83,7 @@ class Dane:
         :return:
         '''
         self.ok[nr] = False
+
     def aktywuj_pkt(self, nr):
         '''
         analogicznie do powyższej
@@ -99,6 +105,7 @@ class Dane:
 
     def obl_outputy_sr(self):
         pass
+
     def zwrot_ok(self):
         pass
 
@@ -120,8 +127,7 @@ class Grupa(Dane):
         :return: [[numery aktywnych punktów], x4]
         """
         ok_nrs = [i for i in range(len(self.szczury)) if self.szczury[i].aktywnosc is True]
-        return [ok_nrs,ok_nrs,ok_nrs,ok_nrs]
-
+        return [ok_nrs, ok_nrs, ok_nrs, ok_nrs]
 
     def obl_outputy_sr(self):
         '''
@@ -202,7 +208,7 @@ class Grupa(Dane):
         # tworzenie stringa do sprintowania
         str2prt = ''
         szer_pola = 11
-        po_przecinku = 6
+        po_przecinku: int = 6
 
         print(8 * ' ', "K1", "K2", "R1", "R2", sep=12 * ' ')
         for par in ('k1', 'k2', 'r1', 'r2'):
@@ -307,7 +313,7 @@ class Grupa(Dane):
             self.true_Fy.append(mean(Fy_od_danego_b))
             self.true_F_sems.append(sem(Fy_od_danego_b))
         self.obl_parametry(self.By, self.true_Fy)
-        self.obl_output(self.parametry, self.true_outputs)  #todo gdzie to jest???
+        self.obl_output(self.parametry, self.true_outputs)  # todo gdzie to jest???
         self.obl_parametry(self.By, self.Fy)
 
     def aktualizacja_D(self):
@@ -322,6 +328,7 @@ class Grupa(Dane):
         self.obl_parametry(*self.zwrot_ok()[:2])
         self.obl_outputy_sr()
         self.obl_semy_outputow()
+
 
 class Szczur(Dane):
     def __init__(self):
@@ -347,7 +354,7 @@ class Szczur(Dane):
         fy = [self.Fy[i] for i in range(len(self.Fy)) if self.ok[i]]
         fy_s = [self.semy_punktow[i] for i in range(len(self.Fy)) if self.ok[i]]
         ok_nrs = [i for i in range(len(self.By)) if self.ok[i]]
-        return [by, fy, fy_s,ok_nrs]
+        return [by, fy, fy_s, ok_nrs]
 
     def aktywuj_szcz(self):
         """
@@ -389,24 +396,25 @@ class Szczur(Dane):
         :param parametry: a,b,d,e
         :return: None
         """
-        a, b, d, e = parametry
-        delta = abs(b ** 2 - 4 * a) ** (1 / 2)
-        k1 = (b - delta) / 2
-        k2 = b - k1
-        try:
-            r1 = (d - e * k1) / (k1 ** 2 - k1 * k2)
-            r2 = (e + k1 * r1) / (-k2)
-        except ZeroDivisionError:
-            print("błąd k1 = k2 lub k2 = 0 - obl_output")
-            r1 = (d - e * k1) / (k1 ** 2 - k1 * k2+0.001)
-            r2 = (e + k1 * r1) / (-k2+0.001)
+        # a, b, d, e = parametry
+        # delta = abs(b ** 2 - 4 * a) ** (1 / 2)
+        # k1 = (b - delta) / 2
+        # k2 = b - k1
+        # try:
+        #     r1 = (d - e * k1) / (k1 ** 2 - k1 * k2)
+        #     r2 = (e + k1 * r1) / (-k2)
+        # except ZeroDivisionError:
+        #     print("błąd k1 = k2 lub k2 = 0 - obl_output")
+        #     r1 = (d - e * k1) / (k1 ** 2 - k1 * k2 + 0.001)
+        #     r2 = (e + k1 * r1) / (-k2 + 0.001)
         nazwy_outputow = ['k1', 'k2', 'r1', 'r2']
-        wart_outputow = [k1, k2, r1, r2]
+        wart_outputow = [*parametry]
         for nr_out in range(len(nazwy_outputow)):
             if flag is None:
                 self.outputy[nazwy_outputow[nr_out]] = wart_outputow[nr_out]
             else:
                 flag[nazwy_outputow[nr_out]] = wart_outputow[nr_out]
+
 
     def aktualizacja_S(self):
         """
@@ -419,18 +427,18 @@ class Szczur(Dane):
         self.obl_output(self.parametry)
 
 
-
 class Punkt:
     """
     do ewentualnego zastosowania w przyszłości
     """
+
     def __init__(self):
         self.x: int = -1
         self.y: int = -1
         self.active: bool = True
 
 
-def scatchard_curv(x, a, b, d, e):
+def scatchard_curv(x, k1, k2, r1, r2):
     """
     warring for absolute delta
     oblicza wartość funkcji scatcharda w x
@@ -438,6 +446,10 @@ def scatchard_curv(x, a, b, d, e):
     :params a, b, c, d: function parameters
     :return: value of the scatchard function
     """
+    a = k1 * k2
+    b = k1 + k2
+    d = -k1 * k2 * (r1 + r2)
+    e = -k1 * r1 - k2 * r2
     A = 1
     B = e + b * x
     C = a * x * x + d * x
@@ -497,7 +509,7 @@ def zapis_grup(grupy, par=None):
     :return:
     """
     if par is None:
-        par = "grupy"
+        par = ["grupy"]
     with open(par[0] + ".bin", 'wb') as plik:
         save(grupy, plik)
 
@@ -574,10 +586,11 @@ def restore():
         snapshots = listdir("DATA/restore")
         for nr, snap_name in enumerate(snapshots):
             print(nr, '. ', snap_name)
-        sel_snapshot_nr = wejscie_ok("wybierz plik do załadowania z listy podajac jego numer >>\n",0,len(snapshots)-1)
+        sel_snapshot_nr = wejscie_ok("wybierz plik do załadowania z listy podajac jego numer >>\n", 0,
+                                     len(snapshots) - 1)
         if sel_snapshot_nr != -1:
             with open("DATA/restore/" + snapshots[sel_snapshot_nr], 'rb') as plik:
-                print('poprawnie załadowano plik ',snapshots[sel_snapshot_nr])
+                print('poprawnie załadowano plik ', snapshots[sel_snapshot_nr])
                 return read(plik)
         else:
             print("niepoprawny numer!")
@@ -603,7 +616,7 @@ def masakrator(grupa):
     for szczur in grupa.szczury:
         # optymalizacja szczura
         amount_points = len(szczur.zwrot_ok()[0])
-        max_nr_dezaktiv = int(amount_points/3)
+        max_nr_dezaktiv = int(amount_points / 3)
         min_diff = [9] * max_nr_dezaktiv
         good_points_nrs = []
         reachable_points_nrs = szczur.zwrot_ok()[3]
@@ -616,10 +629,11 @@ def masakrator(grupa):
                     szczur.dezaktywuj_pkt(nr_punktu)
                 szczur.aktualizacja_S()
                 par = szczur.parametry
-                diff = sum([abs(scatchard_curv(szczur.zwrot_ok()[0][point_nr], *par) - szczur.zwrot_ok()[1][point_nr])
-                            for point_nr in range(amount_points - il_inactiv_points)])
-                if diff < min_diff[il_inactiv_points-1] and szczur.outputy['r1'] > 0 and szczur.outputy['r2'] > 0:
-                    min_diff[il_inactiv_points-1] = dc(diff)
+                diff = sum(
+                    [abs(scatchard_curv(szczur.zwrot_ok()[0][point_nr], *par) - szczur.zwrot_ok()[1][point_nr]) ** 2
+                     for point_nr in range(amount_points - il_inactiv_points)])
+                if diff < min_diff[il_inactiv_points - 1] and szczur.outputy['r1'] > 0 and szczur.outputy['r2'] > 0:
+                    min_diff[il_inactiv_points - 1] = dc(diff)
                     good_points_nrs[il_inactiv_points - 1] = dc(comb)
                 for nr_punktu in comb:
                     szczur.aktywuj_pkt(nr_punktu)
@@ -646,7 +660,7 @@ def masakrator(grupa):
             szczur.dezaktywuj_pkt(nr_punktu)
         szczur.aktualizacja_S()
 
-    #optymalizacja grupy
+    # optymalizacja grupy
 
     for szczur in grupa.szczury:
         if szczur.outputy['r1'] < 0 or szczur.outputy['r2'] < 0:
@@ -664,12 +678,11 @@ def masakrator(grupa):
                 try:
                     grupa.szczury[nr_szczura].dezaktywuj_szcz()
                 except:
-                    print(grupa.szczury,len(grupa.szczury),nr_szczura,comb)
+                    print(grupa.szczury, len(grupa.szczury), nr_szczura, comb)
             # try:
             grupa.aktualizacja_D()
             # except ArithmeticError:
             #     print(grupa.nazwa, grupa.zwrot_ok(), )
-
 
             sems = grupa.semy_outputow
             amount_wins = 0
@@ -722,12 +735,12 @@ def masakrator(grupa):
     except:
         print('bład', grupa.zwrot_ok())
     # for szczur in grupa.szczury:
-        # print(szczur.ok)
+    # print(szczur.ok)
 
-
-    print(grupa.nazwa, grupa.outputy_sr, grupa.semy_outputow,sep='\n',end='\n\n')
+    print(grupa.nazwa, grupa.outputy_sr, grupa.semy_outputow, sep='\n', end='\n\n')
     # todo która ilosc punktow najlepsza dla danego szczura/grupy
     for nr, szczur in enumerate(grupa.szczury):
         tab = [True if i in szczur.zwrot_ok()[3] else False for i in range(len(szczur.By))]
-        print('szczur nr: ',nr,' : ',szczur.aktywnosc, tab, szczur.outputy)
+        print('szczur nr: ', nr, ' : ', szczur.aktywnosc if szczur.aktywnosc is False else str(szczur.aktywnosc) + ' ',
+              tab, szczur.outputy)
     return grupa
