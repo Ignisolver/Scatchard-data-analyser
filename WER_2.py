@@ -41,7 +41,7 @@ class Dane:
         self.outputy_O = {'k1': None, 'k2': None, 'r1': None, 'r2': None}
         # Słownik zawierający oryginalne wartosci: k1,r1,k2,r2
         # dla grupy - wartosci srednie
-        self.parametry = [None] * 4  # k1,k2,r1,r2
+        self.parametry = []  # k1,k2,r1,r2
         # Lista zawierajaca parametry hiperboli: a, b, d, e
         self.parametry_O = []
         # Lista orginalnych parametrow
@@ -58,20 +58,32 @@ class Dane:
         # if self.nazwa == "Szczur":
         #     sigma = [0.001 for i in range(len(self.By))]
         parametry_wejsciowe = np.array(
-            [1, 4, 1, 4])
+            [0.1,0.1,1,10])
         # todo dobor tych parametrów i zabezpieczenie bledu jak sie nie uda dobrać - jak sie nie da to losuje inne
         # self.parametry = curve_fit(scatchard_curv, self.zwrot_ok()[0], self.zwrot_ok()[1], p0=parametry_wejsciowe)[0]
-        try:
-            # if len(arg) <= 4 or len(wart) != len(arg):
-            # print(len(arg),len(wart))
-            if len(arg) <= 2:
-                print(self.nazwa, self.zwrot_ok(), len(self.szczury))
-            self.parametry = curve_fit(scatchard_curv, arg, wart, p0=parametry_wejsciowe)[0]
-        except RuntimeError or ZeroDivisionError as e:
-            with open("errors.txt", 'w') as plik:
-                plik.write(str(e))
-        except:
-            print(arg, wart,parametry_wejsciowe)
+        done = False
+        comb = list(combinations([i/10 for i in range(1,80,2)],4))
+        nr_comb = 0
+        while done is False:
+            parametry_wejsciowe = np.array(
+                comb[nr_comb])
+            nr_comb += 1
+            try:
+                # if len(arg) <= 4 or len(wart) != len(arg):
+                # print(len(arg),len(wart))
+                # if len(arg) <= 2:
+                #     print(self.nazwa, self.zwrot_ok(), len(self.szczury))
+                self.parametry = curve_fit(scatchard_curv, arg, wart, p0=parametry_wejsciowe)[0]
+            except RuntimeError or ZeroDivisionError as e:
+                pass
+                # with open("errors.txt", 'w') as plik:
+                #     plik.write(str(e))
+                # continue
+            # except:
+            #     print("błąd")
+            #     print(arg, wart, parametry_wejsciowe)
+            else:
+                done = True
 
 
     def dezaktywuj_pkt(self, nr):
@@ -411,6 +423,7 @@ class Szczur(Dane):
         wart_outputow = [*parametry]
         for nr_out in range(len(nazwy_outputow)):
             if flag is None:
+                # print(self.outputy,nazwy_outputow,wart_outputow)
                 self.outputy[nazwy_outputow[nr_out]] = wart_outputow[nr_out]
             else:
                 flag[nazwy_outputow[nr_out]] = wart_outputow[nr_out]
@@ -614,6 +627,7 @@ def masakrator(grupa):
     """
     grupa = dc(grupa)
     for szczur in grupa.szczury:
+        print(szczur.nazwa)
         # optymalizacja szczura
         amount_points = len(szczur.zwrot_ok()[0])
         max_nr_dezaktiv = int(amount_points / 3)

@@ -3,6 +3,7 @@ from os import system as clean
 from platform import system
 from FUNKCJE_inicjalizacji import *
 from WER_2 import *
+from math import inf
 from time import  sleep
 
 def main():
@@ -184,7 +185,7 @@ def main():
                     list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
 
             if nr_fun == 13:
-                cfr = curve_fit(scatchard_curv, *sel_group.szczury[0].zwrot_ok()[0:2])
+                cfr = curve_fit(scatchard_curv, *sel_group.szczury[0].zwrot_ok()[0:2],bounds=[[0, inf]*4])
                 print(sel_group.szczury[0].zwrot_ok()[3])
                 for i in cfr:
                     print(i)
