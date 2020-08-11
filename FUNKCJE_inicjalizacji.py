@@ -5,7 +5,7 @@ from copy import deepcopy as dcopy
 
 def import_grupy(nazwa_grupy):
     """
-    pobiera dane
+    pobiera dane z plików txt i zamienia str na flaot
     :return: lista zawierajaca [ B,B/F]
     B, B/F - listy wartosci B dla punktów
     wartosci dla dago punktu

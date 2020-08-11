@@ -3,6 +3,8 @@ from os import system as clean
 from platform import system
 from FUNKCJE_inicjalizacji import *
 from WER_2 import *
+from math import inf
+from time import  sleep
 
 def main():
     try:
@@ -17,7 +19,6 @@ def main():
         clean('clear')  # windows - cls
         print("wybierz grupę którą chcesz się zająć:")
         print("1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m")
-        g_n = ["1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m"]
         nr_gr = wejscie_ok("Wpisz nr od 1 do 8 >>", 1, 8)
         if nr_gr != -1:
             sel_group = grupy[group_name(nr_gr)]
@@ -161,7 +162,7 @@ def main():
                     if input("czy chcesz zapisać zmiany na ten moment jako punkt przywracania? "
                              "(enter-nie/coś innego - tak"):
                         now = datetime.now()
-                        zapis_grup(grupy, par=['DATA/restore/','grupy_'+ '-'.join(
+                        zapis_grup(grupy, par=['DATA/restore/grupy' + '-'.join(
                             list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
 
                     else:
@@ -171,14 +172,23 @@ def main():
             if nr_fun == 11:
                 rest_result = restore()
                 grupy = grupy if rest_result == -1 else rest_result
+                grupy['4 - SDR_w'].podsum_grupy()
+                zapis_grup(grupy)
+                break
 
             if nr_fun == 12:
+                mas_dict = {}
+                now = datetime.now()
                 for grupa in grupy.values():
-                        masakrator(grupa)
+                    mas_dict.update({grupa.nazwa: masakrator(grupa)})
+                zapis_grup(mas_dict, par=['DATA/restore/grupy_masakrator' + '-'.join(
+                    list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
 
             if nr_fun == 13:
-                print(sel_group.nazwa,len(sel_group.szczury),sel_group.zwrot_ok())
-
+                cfr = curve_fit(scatchard_curv, *sel_group.szczury[0].zwrot_ok()[0:2],bounds=[[0, inf]*4])
+                print(sel_group.szczury[0].zwrot_ok()[3])
+                for i in cfr:
+                    print(i)
 
 
 if __name__ == "__main__":
