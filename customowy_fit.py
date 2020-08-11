@@ -51,6 +51,12 @@ def make_M(x, k_1, k_2, q_1, q_2):
 
 #wszystkie powyższe funkcje są pomocnicze, nieskomplikowane i nie tak ważne
 
+def get_r(x, y, k_1, k_2, q_1, q_2):
+    H = np.subtract(y, F(x, k_1, k_2, q_1, q_2))
+    H = np.reshape(H, (len(y), 1))
+    R = np.subtract(1, np.divide(np.sum(np.power(H, 2)), np.sum(np.power(np.subtract(y, np.average(y)), 2))))
+    return R
+
 
 def fit(x, y):
 
@@ -59,10 +65,11 @@ def fit(x, y):
     #output: dopasowane parametry z dopisaną na końcu wartośią R
 
     #zakładamy początkowe wartości parametrów
-    k_1 = 0.5
-    k_2 = 5
-    q_1 = 100
+    k_1 = 0.1
+    k_2 = 0.5
+    q_1 = 0.1
     q_2 = 2
+
     for i in range(1, 100):
         print(k_1,k_2,q_1,q_2)
         #obliczanie H (wektora różnic pomiędzy wartościami przewidywanymi i zmierzonymi)
@@ -70,16 +77,18 @@ def fit(x, y):
         H = np.reshape(H, (len(y), 1))
         #tworzenie macierzy pochodnych
         M = make_M(x, k_1, k_2, q_1, q_2)
+        #print(M)
         #cała magia z odwracaniem macierzy i wynarzaniem jej przez wektor H
         Mt = np.transpose(M)
         corr = np.dot(np.dot(np.linalg.inv(np.dot(Mt, M)), Mt), H)
         corr = np.reshape(corr, (1, 4))
         #poprawianie parametrów
-        k_1 = max(0.00001, np.add(k_1,corr[0][0]))
-        k_2 = max(0.00001, np.add(k_2,corr[0][1]))
-        q_1 = max(0.00001, np.add(q_1,corr[0][2]))
-        q_2 = max(0.00001, np.add(q_2,corr[0][3]))
-    R = np.subtract(1, np.divide(np.sum(np.power(H, 2)), np.sum(np.power(np.subtract(y,np.average(y)), 2))))
+        k_1 = max(0.0001, np.add(k_1,corr[0][0]))
+        k_2 = max(0.0001, np.add(k_2,corr[0][1]))
+        q_1 = max(0.0001, np.add(q_1,corr[0][2]))
+        q_2 = max(0.0001, np.add(q_2,corr[0][3]))
+    R = get_r(x,y,k_1,k_2,q_1,q_2)
+    #R = np.subtract(1, np.divide(np.sum(np.power(H, 2)), np.sum(np.power(np.subtract(y,np.average(y)), 2))))
     return k_1, k_2, q_1, q_2, R
 
 
