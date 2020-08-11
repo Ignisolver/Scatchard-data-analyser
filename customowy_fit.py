@@ -51,8 +51,8 @@ def make_M(x, k_1, k_2, q_1, q_2):
 
 #wszystkie powyższe funkcje są pomocnicze, nieskomplikowane i nie tak ważne
 
-def get_r(x, y, k_1, k_2, q_1, q_2):
-    H = np.subtract(y, F(x, k_1, k_2, q_1, q_2))
+def get_r(x, y, params):
+    H = np.subtract(y, F(x, *params))
     H = np.reshape(H, (len(y), 1))
     R = np.subtract(1, np.divide(np.sum(np.power(H, 2)), np.sum(np.power(np.subtract(y, np.average(y)), 2))))
     return R
