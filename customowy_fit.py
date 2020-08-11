@@ -87,13 +87,13 @@ def fit(x, y):
         k_2 = max(0.0001, np.add(k_2,corr[0][1]))
         q_1 = max(0.0001, np.add(q_1,corr[0][2]))
         q_2 = max(0.0001, np.add(q_2,corr[0][3]))
-    R = get_r(x,y,k_1,k_2,q_1,q_2)
+    R = get_r(x,y,[k_1,k_2,q_1,q_2])
     #R = np.subtract(1, np.divide(np.sum(np.power(H, 2)), np.sum(np.power(np.subtract(y,np.average(y)), 2))))
     return k_1, k_2, q_1, q_2, R
 
 
-print(fit(np.array([14.228124299813, 7.22534382502001, 1.22042144571886, 0.164052280608162, 0.023733262203254, 0.00420182448653, 0.002272606028274]),
-          np.array([0.020302634443719, 0.031305017605634, 0.05397807140849, 0.073043677371344, 0.097161252560726, 0.08471731959956, 0.081962481962482])))
-
+# print(fit(np.array([14.228124299813, 7.22534382502001, 1.22042144571886, 0.164052280608162, 0.023733262203254, 0.00420182448653, 0.002272606028274]),
+#           np.array([0.020302634443719, 0.031305017605634, 0.05397807140849, 0.073043677371344, 0.097161252560726, 0.08471731959956, 0.081962481962482])))
+#
 #mały komentarz: W większości pzypadków w których próbowałem działa bez zarzutu, ale znowu rzeczy zależą od początkowych parametrów, ale generalnie kombinacja liczb całkowitych z zakresu 1-20 działa.
 #Jak już ruszy to zazwyczaj działa dobrze. Nie wiem jak działa łapanie błędów w pythonie, ale generalnie fajnie byłoby napisdać jakiegoś while-a który próbuje różne wartośći początkowe aż któraś nie zadziała

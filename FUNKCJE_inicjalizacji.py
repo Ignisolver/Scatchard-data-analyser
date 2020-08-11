@@ -55,6 +55,7 @@ def inicjalizacja_grupy(pobrane_dane, nazwa):
         szczur.obl_output(szczur.parametry)
         szczur.parametry_O = dcopy(szczur.parametry)
         szczur.outputy_O = dcopy(szczur.outputy)
+        # print("FS_58,", szczur.nazwa,szczur.parametry)
 
     grupa.nazwa = nazwa
     grupa.ok = [True for i in range(len(grupa.szczury[0].ok))]
@@ -79,6 +80,6 @@ def all_groups_maker():
     GRUPY = {}
     nazwy = ["1 - GKC_w", "2 - GKR_w", "3 - SDC_w", "4 - SDR_w", "5 - GKC_m", "6 - GKR_m", "7 - SDC_m", "8 - SDR_m"]
     for nazwa_grupy in nazwy:
+        # print("FS 83", nazwa_grupy)
         GRUPY.update({nazwa_grupy: inicjalizacja_grupy(import_grupy(nazwa_grupy), nazwa_grupy)})
     return GRUPY
-

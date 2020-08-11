@@ -185,10 +185,7 @@ def main():
                     list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
 
             if nr_fun == 13:
-                cfr = curve_fit(scatchard_curv, *sel_group.szczury[0].zwrot_ok()[0:2],bounds=[[0, inf]*4])
-                print(sel_group.szczury[0].zwrot_ok()[3])
-                for i in cfr:
-                    print(i)
+                sel_group = masakrator(sel_group)
 
 
 if __name__ == "__main__":
