@@ -53,20 +53,20 @@ def inicjalizacja_grupy(pobrane_dane, nazwa):
         szczur.semy_punktow = [0 for i in range(len(szczur.By))]
         szczur.obl_parametry(*szczur.zwrot_ok()[:2])
         szczur.obl_output(szczur.parametry)
-        szczur.parametry_O = dcopy(szczur.parametry)
-        szczur.outputy_O = dcopy(szczur.outputy)
+        # szczur.parametry_O = dcopy(szczur.parametry)
+        # szczur.outputy_O = dcopy(szczur.outputy)
         # print("FS_58,", szczur.nazwa,szczur.parametry)
 
     grupa.nazwa = nazwa
     grupa.ok = [True for i in range(len(grupa.szczury[0].ok))]
     grupa.obl_sr_By_Fy_i_semy_pkt_grupy()
-    grupa.semy_punktow_O = dcopy(grupa.semy_punktow)
+    # grupa.semy_punktow_O = dcopy(grupa.semy_punktow)
     # grupa.obl_parametry(*grupa.zwrot_ok()[0:2])
     # grupa.parametry_O = dcopy(grupa.parametry)
     grupa.obl_outputy_sr()
-    grupa.outputy_O = dcopy(grupa.outputy_sr)
+    # grupa.outputy_O = dcopy(grupa.outputy_sr)
     grupa.obl_semy_outputow()
-    grupa.semy_outputow_O = dcopy(grupa.semy_outputow)
+    # grupa.semy_outputow_O = dcopy(grupa.semy_outputow)
     for szczur in grupa.szczury:
         szczur.semy_punktow = [0] * len(grupa.Fy)
 

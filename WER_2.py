@@ -7,7 +7,11 @@ from os import listdir
 from itertools import combinations
 from copy import deepcopy as dc
 from customowy_fit import get_r
-
+comb_list = [[a/10000,b/100,c,d] for a in range(1,102,20)
+                                for b in range(1,112,20)
+                                for c in range(10,202,int(190/5))
+                                for d in range(1,11,2)]
+comb = list(combinations([i/10 for i in range(1,102,20)],4))
 # todo zakoentować nieużywane funckcje
 
 class Dane:
@@ -55,20 +59,17 @@ class Dane:
         dopasowuje parametry funkcji scatcharda do danych b i b/F -
         :return: zapisuje parametry jako self.parametry
         """
-        # if self.nazwa == "Szczur":
-        #     sigma = [0.001 for i in range(len(self.By))]
-        parametry_wejsciowe = np.array(
-            [0.1,0.1,1,10])
-        # todo dobor tych parametrów i zabezpieczenie bledu jak sie nie uda dobrać - jak sie nie da to losuje inne
-        # self.parametry = curve_fit(scatchard_curv, self.zwrot_ok()[0], self.zwrot_ok()[1], p0=parametry_wejsciowe)[0]
-        done = False
-        comb = list(combinations([i/10 for i in range(1,100,10)],4)) #todo czy ok
+        something_is = False
         nr_comb = 0
-        while done is False:
+        max_r = 0
+        while True:
             try:
                 parametry_wejsciowe = np.array(comb[nr_comb])
             except:
-                print("błąd")
+                if something_is:
+                    print("znaleziono nieoptymalne parametry")
+                else:
+                    print("NIE znaleziono optymalnych parametrów")
                 break
             nr_comb += 1
             # print(comb[nr_comb])
@@ -77,7 +78,11 @@ class Dane:
                 # print(len(arg),len(wart))
                 # if len(arg) <= 2:
                 #     print(self.nazwa, self.zwrot_ok(), len(self.szczury))
-                self.parametry = curve_fit(scatchard_curv, arg, wart, p0=parametry_wejsciowe, bounds=[0, 200])[0]
+                parametry = curve_fit(scatchard_curv, arg, wart, p0=parametry_wejsciowe, bounds=[0, 300])[0]
+                r = get_r(*self.zwrot_ok()[0:2],parametry)
+                if r > max_r:
+                    max_r = r
+                    self.parametry = dc(parametry)
             except:
                 pass
                 # with open("errors.txt", 'w') as plik:
@@ -87,7 +92,10 @@ class Dane:
             #     print("błąd")
             #     print(arg, wart, parametry_wejsciowe)
             else:
-                done = True
+                if get_r(*self.zwrot_ok()[0:2],self.parametry) >= 0.98:
+                    break
+                else:
+                    something_is = True
 
 
     def dezaktywuj_pkt(self, nr):
@@ -308,7 +316,7 @@ class Grupa(Dane):
                 plt.plot(x, y, kolor + '-')
                 # plt.plot(szczur.By, szczur.Fy, kolor + '*')
         if zmiany:
-            plt.title('wykres aktywnych szczurów')
+            plt.title('wykres aktywnych szczurów z grupy {}'.format(self.nazwa))
         else:
             plt.title('wykres wszystkich szczurów')
         plt.grid()
@@ -629,9 +637,9 @@ def masakrator(grupa):
     - obliczyć dla danego szczura parametry wyjściowe
     2.  z każdej grupy odjąć od 1 do max 1/3 szczórów i sprawdzić kiedy sem będzie najmniejsze
     """
+    # todo zrobić dla 0 pkt i 0 szczurów
     grupa = dc(grupa)
     for szczur in grupa.szczury:
-        print(szczur.nazwa)
         # optymalizacja szczura
         amount_points = len(szczur.zwrot_ok()[0])
         max_nr_dezaktiv = int(amount_points / 3)
@@ -650,32 +658,28 @@ def masakrator(grupa):
                 r = get_r(*szczur.zwrot_ok()[0:2], par)
                 if r > min_r[il_inactiv_points - 1] and szczur.outputy['r1'] > 0 and szczur.outputy['r2'] > 0:
                     min_r[il_inactiv_points - 1] = r
-                    good_points_nrs[il_inactiv_points - 1] = comb
+                    good_points_nrs[il_inactiv_points - 1] = [comb,r]
                 for nr_punktu in comb:
                     szczur.aktywuj_pkt(nr_punktu)
                 szczur.aktualizacja_S()
-        for nr_punktu in good_points_nrs[1]:  # do ustalenia
-            szczur.dezaktywuj_pkt(nr_punktu)
+        # końcowy wybór punktów
+        for nrsy_punktow, r in good_points_nrs:
+            if r >= 0.99:
+                for nr_punktu in nrsy_punktow:
+                    szczur.dezaktywuj_pkt(nr_punktu)
+                    minim_r = r
+                break
+        else:
+            good_points_nrs_sorted = sorted(good_points_nrs, key=lambda x: x[1],reversed=True )
+            for nr_punktu in good_points_nrs_sorted[0][0]:
+                szczur.dezaktywuj_pkt(nr_punktu)
+            minim_r = good_points_nrs_sorted[0][1]
+
         szczur.aktualizacja_S()
-    # good_final_points_nrs = []
-    # min_final_diff = 99
-    #     for il, pkty in enumerate(good_points_nrs):
-    #         for nr_punktu in pkty:
-    #             szczur.dezaktywuj_pkt(nr_punktu)
-    #         szczur.aktualizacja_S()
-    #         par = szczur.parametry
-    #         diff = sum([abs(scatchard_curv(szczur.zwrot_ok()[0][point_nr], *par) - szczur.zwrot_ok()[1][point_nr])
-    #                     for point_nr in range(len(szczur.zwrot_ok()[0]))])
-    #         if diff < min_final_diff:
-    #             min_final_diff = diff
-    #             good_final_points_nrs = dc(pkty)
-    #         for nr_punktu in pkty:
-    #             szczur.aktywuj_pkt(nr_punktu)
-    #         szczur.aktualizacja_S()
-    #     for nr_punktu in good_final_points_nrs:
-    #         szczur.dezaktywuj_pkt(nr_punktu)
-    #     szczur.aktualizacja_S()
-    # optymalizacja grupy
+        print('szczur nr.',szczur.nazwa,'z grupy',grupa.nazwa,'zmasakrowany. R =',minim_r)
+        print(szczur.outputy,szczur.parametry)
+        szczur.wykres_szczura('gr1')
+
 
     reachable_szczurs_nrs = grupa.zwrot_ok()[3]
     amount_szczurs = len(grupa.szczury)
@@ -701,20 +705,26 @@ def masakrator(grupa):
                 if ratio < min_ratio:
                 # print("win", sems)
                     min_ratio = ratio
-                    good_szczurs_nrs[il_inactiv_szczurs - 1] = comb
+                    good_szczurs_nrs[il_inactiv_szczurs - 1] = [comb, ratio]
             for nr_szczura in comb:
                 try:
                     grupa.szczury[nr_szczura].aktywuj_szcz()
                 except:
                     print(grupa.szczury, len(grupa.szczury), nr_szczura, comb)
             grupa.aktualizacja_D()
-    for szczur_nr in good_szczurs_nrs[2]: # regulacja
+
+    # końcowy wybór szczurów
+    good_szczurs_nrs_sorted = sorted(good_szczurs_nrs,key=lambda x: x[1])
+    for szczur_nr in good_szczurs_nrs_sorted[0][0]: # regulacja
+        # print(good_szczurs_nrs_sorted,szczur_nrs)
+        # szczur_nrs = szczur_nrs if type(szczur_nrs) == list else [szczur_nrs]*2
+        # for szczur_nr in szczur_nrs:
+        #     print(szczur_nr)
         grupa.szczury[szczur_nr].dezaktywuj_szcz()
-    grupa.aktualizacja_D()
     try:
         grupa.aktualizacja_D()
     except:
-        print('bład', grupa.zwrot_ok())
+        print('bład aktualizacji', grupa.zwrot_ok())
     # for szczur in grupa.szczury:
     # print(szczur.ok)
     print(grupa.nazwa, grupa.outputy_sr, grupa.semy_outputow, sep='\n', end='\n\n')
@@ -724,3 +734,10 @@ def masakrator(grupa):
         print('szczur nr: ', nr, ' : ', szczur.aktywnosc if szczur.aktywnosc is False else str(szczur.aktywnosc) + ' ',
               tab, szczur.outputy)
     return grupa
+
+
+def mas_buff(grupa,mas_dict, now,ends,nr):
+    mas_dict.update({grupa.nazwa: masakrator(grupa)})
+    zapis_grup(mas_dict, par=['DATA/restore/grupy_masakrator' + '-'.join(
+        list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
+    ends[nr] = 1

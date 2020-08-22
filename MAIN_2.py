@@ -3,6 +3,8 @@ from os import system as clean
 from platform import system
 from FUNKCJE_inicjalizacji import *
 from WER_2 import *
+from threading import Thread
+from waiting import wait
 from math import inf
 from time import  sleep
 
@@ -179,10 +181,12 @@ def main():
             if nr_fun == 12:
                 mas_dict = {}
                 now = datetime.now()
-                for grupa in grupy.values():
-                    mas_dict.update({grupa.nazwa: masakrator(grupa)})
-                zapis_grup(mas_dict, par=['DATA/restore/grupy_masakrator' + '-'.join(
-                    list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
+                ends = [0]*8
+                ends_ok = lambda: True if sum(ends) == 8 else False
+                for nr,grupa in enumerate(grupy.values()):
+                    Thread(target=mas_buff,args=[grupa,mas_dict,now,ends,nr],daemon=True).start()
+                wait(ends_ok)
+
 
             if nr_fun == 13:
                 sel_group = masakrator(sel_group)
