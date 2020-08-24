@@ -7,7 +7,7 @@ from threading import Thread
 from waiting import wait
 from math import inf
 from time import  sleep
-
+# todo poprawic dane- np.7
 def main():
     try:
         with open('grupy.bin', 'rb') as plik:
@@ -184,8 +184,12 @@ def main():
                 ends = [0]*8
                 ends_ok = lambda: True if sum(ends) == 8 else False
                 for nr,grupa in enumerate(grupy.values()):
-                    Thread(target=mas_buff,args=[grupa,mas_dict,now,ends,nr],daemon=True).start()
-                wait(ends_ok)
+                    # Thread(target=mas_buff,args=[grupa,mas_dict,now,ends,nr],daemon=True).start()
+                    mas_dict.update({grupa.nazwa: masakrator(grupa)})
+                    zapis_grup(mas_dict, par=['DATA/restore/grupy_masakrator' + '-'.join(
+                        list(map(str, [now.year, now.month, now.day, now.hour, now.minute, now.second])))])
+
+                # wait(ends_ok)
 
 
             if nr_fun == 13:

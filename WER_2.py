@@ -11,7 +11,8 @@ comb_list = [[a/10000,b/100,c,d] for a in range(1,102,20)
                                 for b in range(1,112,20)
                                 for c in range(10,202,int(190/5))
                                 for d in range(1,11,2)]
-comb = list(combinations([i/10 for i in range(1,102,20)],4))
+comb = [[0.1, 2.1 ,4.1, 6.1]] + list(combinations([i/10 for i in range(1,102,20)],4))
+# comb = list(combinations([i/10 for i in range(1,502,100)],4))
 # todo zakoentować nieużywane funckcje
 
 class Dane:
@@ -59,6 +60,7 @@ class Dane:
         dopasowuje parametry funkcji scatcharda do danych b i b/F -
         :return: zapisuje parametry jako self.parametry
         """
+        #TODO NIE WYCH
         something_is = False
         nr_comb = 0
         max_r = 0
@@ -67,7 +69,8 @@ class Dane:
                 parametry_wejsciowe = np.array(comb[nr_comb])
             except:
                 if something_is:
-                    print("znaleziono nieoptymalne parametry")
+                    pass
+                    # print("znaleziono nieoptymalne parametry")
                 else:
                     print("NIE znaleziono optymalnych parametrów")
                 break
@@ -83,19 +86,17 @@ class Dane:
                 if r > max_r:
                     max_r = r
                     self.parametry = dc(parametry)
+                if r >= 0.98:
+                    with open("optimal_start_params.txt",'a') as plik:
+                        plik.write(str(parametry_wejsciowe) + '\n')
+                    print('znaleziono optymalne parametry')
+                    break
+                something_is = True
+                with open("good_start_params.txt",'a') as plik:
+                    plik.write(str(parametry_wejsciowe)+'\n')
+
             except:
                 pass
-                # with open("errors.txt", 'w') as plik:
-                #     plik.write(str(e))
-                # continue
-            # except:
-            #     print("błąd")
-            #     print(arg, wart, parametry_wejsciowe)
-            else:
-                if get_r(*self.zwrot_ok()[0:2],self.parametry) >= 0.98:
-                    break
-                else:
-                    something_is = True
 
 
     def dezaktywuj_pkt(self, nr):
@@ -670,7 +671,7 @@ def masakrator(grupa):
                     minim_r = r
                 break
         else:
-            good_points_nrs_sorted = sorted(good_points_nrs, key=lambda x: x[1],reversed=True )
+            good_points_nrs_sorted = sorted(good_points_nrs, key=lambda x: x[1],reverse=True )
             for nr_punktu in good_points_nrs_sorted[0][0]:
                 szczur.dezaktywuj_pkt(nr_punktu)
             minim_r = good_points_nrs_sorted[0][1]
@@ -715,6 +716,7 @@ def masakrator(grupa):
 
     # końcowy wybór szczurów
     good_szczurs_nrs_sorted = sorted(good_szczurs_nrs,key=lambda x: x[1])
+    print(good_szczurs_nrs_sorted)
     for szczur_nr in good_szczurs_nrs_sorted[0][0]: # regulacja
         # print(good_szczurs_nrs_sorted,szczur_nrs)
         # szczur_nrs = szczur_nrs if type(szczur_nrs) == list else [szczur_nrs]*2
