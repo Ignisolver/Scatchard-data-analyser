@@ -20,4 +20,11 @@ Object oriented data model with methods to analyse them.
 This file is an entry point for the application.
 
 You have ability to use 13 useful functions for manually analize and represent data and results.
+- show summary
+- show data comparison
+- change data
+- create .pdf with plots
+- save restore point
+- load restore point
+- run *masakrator*
 
