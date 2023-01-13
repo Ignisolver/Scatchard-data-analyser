@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as mpl
 import random as rnd
 
-#Uwaga! funkcje są w pełni znumpajowane, więc i skrajnie nieczytelne. Za długie czytanie może kutkowac bólem głowy.
+#Uwaga! funkcje są w pełni znumpajowane, więc i skrajnie nieczytelne. Za długie czytanie może skutkowac bólem głowy.
 
 def F(x, k_1, k_2, q_1, q_2):
     # definicja krzywej scatcharda
